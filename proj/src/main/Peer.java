@@ -60,7 +60,7 @@ public class Peer extends Thread {
 		rcv_MDB = new ReceiveThread_MDB(this);
 		rcv_MDR = new ReceiveThread_MDR(this);
 
-		degMonitor = new DegreeMonitorThread(this);
+		//degMonitor = new DegreeMonitorThread(this);
 
 		storedMessagesReceived = new ArrayList<Chunk>();
 		chunklist = new ArrayList<Chunk>();
@@ -79,7 +79,7 @@ public class Peer extends Thread {
 
 		this.start();
 
-		degMonitor.start();
+		//degMonitor.start();
 		rcv_MC.start();
 		rcv_MDB.start();
 
