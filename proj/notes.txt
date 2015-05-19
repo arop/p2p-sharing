@@ -1,0 +1,7 @@
+java -classpath ".;..\jars\sqlite-jdbc-3.8.10.1.jar"  -Djavax.net.ssl.keyStore=keystore -Djavax.net.ssl.keyStorePassword=password server.Server
+
+java -Djavax.net.ssl.trustStore=truststore -Djavax.net.ssl.trustStorePassword=sida123 Client
+
+//SQLITE
+java -classpath ".;jars/sqlite-jdbc-3.8.10.1.jar" Sample   # in Windows
+

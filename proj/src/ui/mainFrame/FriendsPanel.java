@@ -2,6 +2,8 @@ package ui.mainFrame;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
@@ -13,16 +15,20 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 
+import peer.PeerNew;
+import ui.addFriendsFrame.AddFriendsWindow;
 import friends.Friend;
 
 public class FriendsPanel extends JPanel {
 
 	private static final long serialVersionUID = 1L;
 
+	private PeerNew mainThread;
 	
-	public FriendsPanel(List<Friend> friendsList){
-		
+	public FriendsPanel(List<Friend> friendsList, PeerNew mainThread){
 		super();
+		this.mainThread = mainThread;
+		
 		this.setLayout(new BorderLayout());
 		
 		//TABLE OF FRIENDS
@@ -66,10 +72,29 @@ public class FriendsPanel extends JPanel {
 		
 		
 		
-		//REFRESH FRIENDS' LIST
-		JButton refreshList = new JButton("Refresh Friends List");
-		refreshList.setPreferredSize(new Dimension(150, 50));
-		this.add(refreshList, BorderLayout.SOUTH);
+		//BOTTOM BUTTONS
+		JPanel bottomButtons = new JPanel();
+		bottomButtons.setLayout(new BorderLayout());
+				
+			//ADD FRIENDS
+			JButton addFriendsButton = new JButton("<html><center>Add<br>Friends</center></html>");
+			addFriendsButton.setPreferredSize(new Dimension(100, 50));		
+			bottomButtons.add(addFriendsButton, BorderLayout.WEST);
+			addFriendsButton.addActionListener(new ActionListener()
+				{
+					@Override	
+					public void actionPerformed(ActionEvent e){
+						new AddFriendsWindow(mainThread);
+					}
+				});
+		
+			//REFRESH FRIENDS' LIST
+			JButton refreshListButton = new JButton("<html><center>Refresh<br>Friends List</center></html>");
+			refreshListButton.setPreferredSize(new Dimension(100, 50));		
+			bottomButtons.add(refreshListButton, BorderLayout.EAST);
+			
+		this.add(bottomButtons, BorderLayout.SOUTH);
+			
 
 	}
 }

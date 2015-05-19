@@ -11,6 +11,7 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
+import peer.PeerNew;
 import friends.Friend;
 import friends.FriendCircle;
 
@@ -19,9 +20,10 @@ public class GUI extends JFrame {
 
 	private static final long serialVersionUID = 1L;
 
-
-	public GUI() {
-
+	private PeerNew mainThread;
+	
+	public GUI(PeerNew peer) {
+		mainThread = peer;
         initUI();
     }
 
@@ -57,7 +59,7 @@ public class GUI extends JFrame {
         JPanel friendshipsPanel = new JPanel();
         friendshipsPanel.setLayout(new BorderLayout());
         
-        FriendsPanel friendsPanel = new FriendsPanel(friendsList);
+        FriendsPanel friendsPanel = new FriendsPanel(friendsList, mainThread);
         friendshipsPanel.add(friendsPanel, BorderLayout.WEST);
         
         CirclesPanel circlesPanel = new CirclesPanel(circles);
@@ -110,7 +112,7 @@ public class GUI extends JFrame {
         
             @Override
             public void run() {
-            	GUI ex = new GUI();
+            	GUI ex = new GUI(null);
                 ex.setVisible(true);
             }
         });
