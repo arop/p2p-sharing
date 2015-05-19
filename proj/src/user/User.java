@@ -8,13 +8,15 @@ public class User {
 	private String email;
 	private String password_hash;
 	private String ip; //last known ip
+	private int port; //port listening to messages
 	
-	public User(int id, String un, String em, String hash, String i){
+	public User(int id, String un, String em, String hash, String i, int p){
 		user_id = id;
 		username = un;
 		email = em;
 		password_hash = hash;
 		ip = i;
+		port = p;
 	}
 
 	public String getUsername() {
@@ -37,6 +39,14 @@ public class User {
 		return password_hash;
 	}
 
+	public int getPort(){
+		return port;
+	}
+	
+	@Override
+	public String toString() {
+	   return "User [user_id=" + user_id + ", username=" + username + ", email="+ email + ", password_hash=" + password_hash + ", ip=" + ip + ", port="+port+"]";
+	}
 
 
 }

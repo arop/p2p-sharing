@@ -1,9 +1,12 @@
 package extra;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.InetAddress;
+import java.net.ServerSocket;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -89,6 +92,40 @@ public abstract class Tools {
 		return "GETCHUNK " + Tools.getVersion() + " " + fileId + " " + chunkNo + "\r\n\r\n";
 	}
 
+	/**
+	 * #proj2
+	 * GETALLUSERS <Version> <CRLF><CRLF>
+	 * @param type
+	 * @return
+	 */
+	public static String generateMessage(String type){
+		String message = null;
+		switch(type) {
+		case "GETALLUSERS":
+			message = "GETALLUSERS " + Tools.getVersion() + "\r\n\r\n";
+			break;
+		default:
+			System.err.println("Invalid Message!");
+			break;
+		}
+		return message;
+	}
+	
+	
+	public static String generateJsonMessage(String type, String json_body){
+		String message = null;
+		switch(type) {
+		case "USERS":
+			message = "USERS " + Tools.getVersion() + "\r\n\r\n" + json_body ;
+			break;
+		default:
+			System.err.println("Invalid Message!");
+			break;
+		}
+		return message;
+	}
+	
+	
 	public static String getPeerAddress() throws UnknownHostException {
 		return InetAddress.getLocalHost().getHostAddress();
 	}
@@ -152,4 +189,26 @@ public abstract class Tools {
 	public static void setVersion(String version) {
 		Tools.version = version;
 	}
+
+	public static int getFreePort(){
+		int port = -1;
+		try {
+			ServerSocket  ss = new ServerSocket(0);
+			port = ss.getLocalPort();
+			ss.close();
+		} catch (IOException e) {
+			return -1;
+		}
+		return port;
+	}
+	
+	
+	
+	public static String getBody(String msg) {
+		int index = msg.indexOf("\r\n\r\n") + 4;
+		if (index < 0)
+			return null;
+		return msg.substring(index);
+	}
+
 }
