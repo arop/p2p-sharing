@@ -6,7 +6,6 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -95,6 +94,8 @@ public abstract class Tools {
 	/**
 	 * #proj2
 	 * GETALLUSERS <Version> <CRLF><CRLF>
+	 * OK <Version> <CRLF><CRLF>
+	 * NOTOK <Version> <CRLF><CRLF>
 	 * @param type
 	 * @return
 	 */
@@ -104,6 +105,13 @@ public abstract class Tools {
 		case "GETALLUSERS":
 			message = "GETALLUSERS " + Tools.getVersion() + "\r\n\r\n";
 			break;
+		case "OK":
+			message = "OK " + Tools.getVersion() + "\r\n\r\n";
+			break;
+		case "NOTOK":
+			message = "NOTOK " + Tools.getVersion() + "\r\n\r\n";
+			break;
+			  
 		default:
 			System.err.println("Invalid Message!");
 			break;
@@ -111,9 +119,15 @@ public abstract class Tools {
 		return message;
 	}
 	
-	
+	/**
+	 * #proj2
+	 * USERS <Version> <CRLF><CRLF> Json body with users data
+	 * @param type
+	 * @param json_body
+	 * @return
+	 */
 	public static String generateJsonMessage(String type, String json_body){
-		String message = null;
+		/*String message = null;
 		switch(type) {
 		case "USERS":
 			message = "USERS " + Tools.getVersion() + "\r\n\r\n" + json_body ;
@@ -121,7 +135,22 @@ public abstract class Tools {
 		default:
 			System.err.println("Invalid Message!");
 			break;
-		}
+		}*/
+		String message = type + " " + Tools.getVersion() + "\r\n\r\n" + json_body ;
+		return message;
+	}
+	
+	/**
+	 *  #proj2
+	 *  ADDFRIENDS <Version> <User id> <CRLF><CRLF> JSON of int[] users ids
+	 *  
+	 * @param type message type
+	 * @param user_id Local user id
+	 * @param json_body message body with json data
+	 * @return generated message
+	 */
+	public static String generateJsonMessage(String type, int user_id, String json_body){
+		String message = type + " " + Tools.getVersion() + " " + user_id + "\r\n\r\n" + json_body ;
 		return message;
 	}
 	
@@ -202,13 +231,38 @@ public abstract class Tools {
 		return port;
 	}
 	
+	/**
+	 * 
+	 * @param msg - message received 
+	 * @return head of the message
+	 */
+	public static String getHead(String msg) {
+		int index = msg.indexOf("\r\n\r\n");
+		if (index < 0)
+			return null;
+		return msg.substring(0,index);
+	}
 	
-	
+	/**
+	 * 
+	 * @param msg - message received 
+	 * @return body of the message
+	 */
 	public static String getBody(String msg) {
 		int index = msg.indexOf("\r\n\r\n") + 4;
 		if (index < 0)
 			return null;
 		return msg.substring(index);
+	}
+	
+	/**
+	 * 
+	 * @param msg - message received 
+	 * @return type of the message
+	 */
+	public static String getType(String msg) {
+		return msg.split(" +")[0];
+		
 	}
 
 }

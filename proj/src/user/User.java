@@ -9,6 +9,8 @@ public class User {
 	private String password_hash;
 	private String ip; //last known ip
 	private int port; //port listening to messages
+	private boolean online; //true if user is online - "volatile". should always be re-checked after some time
+	
 	
 	public User(int id, String un, String em, String hash, String i, int p){
 		user_id = id;
@@ -17,6 +19,17 @@ public class User {
 		password_hash = hash;
 		ip = i;
 		port = p;
+		online = false;
+	}
+	
+	public User(int id, String un){
+		user_id = id;
+		username = un;
+		email = null;
+		password_hash = null;
+		ip = null;
+		port = -1;
+		online = true;
 	}
 
 	public String getUsername() {
@@ -41,6 +54,10 @@ public class User {
 
 	public int getPort(){
 		return port;
+	}
+	
+	public boolean isOnline(){
+		return online;
 	}
 	
 	@Override

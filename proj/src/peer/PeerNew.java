@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.lang.reflect.Type;
+import java.net.ConnectException;
 import java.security.Security;
 import java.util.ArrayList;
 
@@ -21,7 +22,11 @@ import com.sun.net.ssl.internal.ssl.Provider;
 import extra.Tools;
 
 public class PeerNew {
-
+	private User localUser;
+	private String serverAddress = "localhost";
+	private int serverPort = 16500; 
+	
+	private static int connection_try_number = 0;
 	/**
 	 * 
 	 * @param msg
@@ -56,7 +61,7 @@ public class PeerNew {
 			response = in.readLine();
 			response += in.readLine(); //TODO (isto está assim hardcoded pq o 
 			response += "\r\n\r\n"+in.readLine(); //readLine lê até ao \r\n apenas)
-			
+			System.out.println("HERE22::"+response);
 			//PARSE RESPONSE
 			String origin_ip = sslSocket.getInetAddress().getHostAddress();
 			//System.out.println("response: " + response + "#" + origin_ip);
@@ -66,7 +71,17 @@ public class PeerNew {
 			in.close();
 			sslSocket.close();		
 			
-		} catch (IOException e) {
+		} 
+		catch (ConnectException e){
+			if (++connection_try_number > 3){
+				connection_try_number = 0;
+				e.printStackTrace();
+				return null;
+			}
+			System.out.println("try: "+connection_try_number);
+			return sendMessage(msg, ip_dest, port_dest);
+		}
+		catch (IOException e) {
 			e.printStackTrace();
 			return null;
 		}
@@ -75,7 +90,7 @@ public class PeerNew {
 	}
 	
 	public ArrayList<User> getAllUsersFromServer(){
-		String response = this.sendMessage(Tools.generateMessage("GETALLUSERS"), "localhost", 16400);
+		String response = this.sendMessage(Tools.generateMessage("GETALLUSERS"), serverAddress, serverPort);
 		Gson gson = new Gson();
 		String type = response.split(" +")[0];
 		if (!type.equals("USERS"))
@@ -87,13 +102,45 @@ public class PeerNew {
 		
 	}
 	
+	/**
+	 * 
+	 * @param user_ids array of ids if the users to add as friends.
+	 */
+	public boolean addFriends(int[] user_ids) {
+		// TODO Auto-generated method stub
+		if (user_ids == null)
+			System.out.println("nulosss");
+		else System.out.println(user_ids[0]);
+		
+		Gson gson = new Gson();
+		String json_data = gson.toJson(user_ids);
+		System.out.println("nulosss2");
+		String response = this.sendMessage(Tools.generateJsonMessage("ADDFRIENDS", localUser.getId(), json_data), serverAddress, serverPort);
+		System.out.println("nulosss3");
+		//System.out.println("response: #"+response+"#");
+		System.out.println("HERE::"+response);
+		return Tools.getType(response).equals("OK");
+	}
+	
 	
 	public static void main(String[] args){
 		PeerNew peer = new PeerNew();
 		//peer.sendMessage("Teste SSL backups!", "localhost", 16400);
+		User local = new User(1, "norim_13");
+		peer.setLocalUser(local);
 		
 		GUI gui = new GUI(peer);
 		gui.setVisible(true);
 		
 	}
+
+	public User getLocalUser() {
+		return localUser;
+	}
+
+	public void setLocalUser(User localUser) {
+		this.localUser = localUser;
+	}
+
+	
 }

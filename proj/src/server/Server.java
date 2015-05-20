@@ -33,11 +33,15 @@ public class Server {
 		return true;
 	}
 	
-	
+	/**
+	 * Contacts each user individually (by communicating with 
+	 * its last known ip/address), to check if it's online.
+	 * @return
+	 */
 	public boolean checkOnlineUsers(){
 		
 		ArrayList<User> users = user_db.getAllUsers(true);
-		
+		//TODO
 		return false;		
 	}
 	
@@ -66,9 +70,23 @@ public class Server {
 		
 		server.login("norim_13@hotmail.com", "b"); //wrong password
 		
-		ConnectionListenerServer con_listener = new ConnectionListenerServer(16400, server);
+		ConnectionListenerServer con_listener = new ConnectionListenerServer(16500, server);
 		con_listener.start();
 		
+	}
+
+	public boolean addFriendsToUser(int user_id, int[] futureFriends) {
+		boolean success = true; 
+		for (int i = 0; i < futureFriends.length; i++){
+			String msg = user_db.addFriend(user_id, futureFriends[i]);
+			if (!msg.equals("success"))
+				success = false;
+		}
+		return success;
+	}
+
+	public ArrayList<User> getFriendsOfUser(int user_id) {
+		return user_db.getFriends(user_id);
 	}
 	
 }
