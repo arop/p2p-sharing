@@ -154,6 +154,19 @@ public abstract class Tools {
 		return message;
 	}
 	
+	/**
+	 *  #proj2
+	 *  
+	 * @param type message type
+	 * @param user_id Local user id
+	 * @param json_body message body with json data
+	 * @return generated message
+	 */
+	public static String generateMessage(String type, int user_id){
+		String message = type + " " + Tools.getVersion() + " " + user_id + "\r\n\r\n" ;
+		return message;
+	}
+	
 	
 	public static String getPeerAddress() throws UnknownHostException {
 		return InetAddress.getLocalHost().getHostAddress();

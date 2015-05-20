@@ -37,8 +37,8 @@ public class AddButtonListener implements ActionListener{
 		}
 		String message ="";
 		if (mainThread.addFriends(user_ids))
-			message = "Success! Please close this window and refresh your friends list.";
-		else message = "An error occured... Please try again later.";		
+			message = "<html><center>Success!<br>Please close this window<br>and refresh your friends list.</center></html>";
+		else message = "<html><center>An error occured...<br>Please try again later.</center></html>";		
 		
 		
 		panel.remove(jscroller);
