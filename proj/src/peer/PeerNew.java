@@ -26,6 +26,18 @@ public class PeerNew {
 	private String serverAddress = "localhost";
 	private int serverPort = 16500; 
 	
+	ArrayList<User> friends;
+	
+	public PeerNew(){
+		
+		//TODO -> LOGIN in server
+		User local = new User(1, "norim_13");
+		this.setLocalUser(local);
+		this.friends = new ArrayList<User>();//initialize list
+		this.getFriendsFromServer(); //update list with values from server
+	}
+	
+	
 	private static int connection_try_number = 0;
 	/**
 	 * 
@@ -102,21 +114,33 @@ public class PeerNew {
 		
 	}
 	
+	public void getFriendsFromServer(){
+		String response = this.sendMessage(Tools.generateMessage("GETFRIENDS", this.localUser.getId()), serverAddress, serverPort);
+		Gson gson = new Gson();
+		String type = Tools.getType(response);
+		if (!type.equals("FRIENDS")){
+			return;
+		}			
+		
+		String list_json = Tools.getBody(response);
+		Type listOfUsersType = new TypeToken<ArrayList<User>>(){}.getType();
+		this.friends = gson.fromJson(list_json, listOfUsersType);
+		
+	}
+	
 	/**
 	 * 
 	 * @param user_ids array of ids if the users to add as friends.
 	 */
 	public boolean addFriends(int[] user_ids) {
-		// TODO Auto-generated method stub
-		if (user_ids == null)
+
+		/*if (user_ids == null)
 			System.out.println("nulosss");
-		else System.out.println(user_ids[0]);
+		else System.out.println(user_ids[0]);*/
 		
 		Gson gson = new Gson();
 		String json_data = gson.toJson(user_ids);
-		System.out.println("nulosss2");
 		String response = this.sendMessage(Tools.generateJsonMessage("ADDFRIENDS", localUser.getId(), json_data), serverAddress, serverPort);
-		System.out.println("nulosss3");
 		//System.out.println("response: #"+response+"#");
 		System.out.println("HERE::"+response);
 		return Tools.getType(response).equals("OK");
@@ -125,9 +149,6 @@ public class PeerNew {
 	
 	public static void main(String[] args){
 		PeerNew peer = new PeerNew();
-		//peer.sendMessage("Teste SSL backups!", "localhost", 16400);
-		User local = new User(1, "norim_13");
-		peer.setLocalUser(local);
 		
 		GUI gui = new GUI(peer);
 		gui.setVisible(true);
@@ -141,6 +162,9 @@ public class PeerNew {
 	public void setLocalUser(User localUser) {
 		this.localUser = localUser;
 	}
-
+	
+	public ArrayList<User> getFriends(){
+		return this.friends;
+	}
 	
 }

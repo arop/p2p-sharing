@@ -251,11 +251,21 @@ public class UserDatabase {
 		  if (rs.isClosed()) //no users with this email
 			  return users;
 		  
+		  //iterate friends ids
 		  while(rs.next()){
+			  int id =  rs.getInt("id2");
+			  
+			  //get user by id
+			  Statement stmt2 = con.createStatement();
+			  ResultSet rs2 = stmt2.executeQuery( "SELECT * FROM User WHERE id = "+id+";" );
 			  User user;
-			  if ((user = getUserFromResultSet(rs, false)) != null)
+			  if ((user = getUserFromResultSet(rs2, false)) != null)
 				  users.add(user);
+			  //close connections
+			  rs2.close();
+			  stmt2.close();
 		  }
+		  
 		  
 	      rs.close();
 	      stmt.close();

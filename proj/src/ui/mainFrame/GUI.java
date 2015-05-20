@@ -37,29 +37,17 @@ public class GUI extends JFrame {
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setResizable(false);
-       // GridLayout grid = new GridLayout(1,3,10,10);
-       // this.setLayout(grid);
-        
-        //retrieve friends list from file? server?
-        User[] friends = {new User(1, "norim"), new User(2,"joao"), new User(3,"filipe"), new User(4,"mira"), new User(5,"pires"),
-        		new User(1, "norim"), new User(2,"joao"), new User(3,"filipe"), new User(4,"mira"), new User(5,"pires"),
-        		new User(1, "norim"), new User(2,"joao"), new User(3,"filipe"), new User(4,"mira"), new User(5,"pires"),
-        		new User(1, "norim"), new User(2,"joao"), new User(3,"filipe"), new User(4,"mira"), new User(5,"pires"),
-        		new User(1, "norim"), new User(2,"joao"), new User(3,"filipe"), new User(4,"mira"), new User(5,"pires"),
-        		new User(1, "norim"), new User(2,"joao"), new User(3,"filipe"), new User(4,"mira"), new User(5,"pires"),
-        		new User(1, "norim"), new User(2,"joao"), new User(3,"filipe"), new User(4,"mira"), new User(5,"pires"),
-        		new User(1, "norim"), new User(2,"joao"), new User(3,"filipe"), new User(4,"mira"), new User(5,"pires")};
-        friendsList = new ArrayList<User>(Arrays.asList(friends));
+
         
         List<FriendCircle> circles = new ArrayList<FriendCircle>();
-        circles.add(new FriendCircle("Circle 1", friendsList.subList(2, 6)));
+        /*circles.add(new FriendCircle("Circle 1", friendsList.subList(2, 6)));
         circles.add(new FriendCircle("Circle 2", friendsList.subList(13, 17)));
-        circles.add(new FriendCircle("Circle 3", friendsList.subList(4, 7)));
+        circles.add(new FriendCircle("Circle 3", friendsList.subList(4, 7)));*/
                 
         JPanel friendshipsPanel = new JPanel();
         friendshipsPanel.setLayout(new BorderLayout());
         
-        FriendsPanel friendsPanel = new FriendsPanel(friendsList, mainThread);
+        FriendsPanel friendsPanel = new FriendsPanel(mainThread);
         friendshipsPanel.add(friendsPanel, BorderLayout.WEST);
         
         CirclesPanel circlesPanel = new CirclesPanel(circles);
@@ -76,12 +64,8 @@ public class GUI extends JFrame {
     private JPanel generateButtonsPanel(int panelWidth, int panelHeight){
     	JPanel panel = new JPanel();
     	panel.setPreferredSize(new Dimension(panelWidth, panelHeight));
-    	//GridLayout grid = new GridLayout(0,1);
     	
-    	//panel.setLayout(grid);
-    	
-    	int buttonWidth = panelWidth;
-    	
+    	int buttonWidth = panelWidth;    	
     	int buttonHeight = 90;
     	
     	

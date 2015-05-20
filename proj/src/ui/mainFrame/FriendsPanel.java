@@ -15,6 +15,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 
+import friends.FriendCircle;
 import peer.PeerNew;
 import ui.addFriendsFrame.AddFriendsWindow;
 import user.User;
@@ -25,7 +26,17 @@ public class FriendsPanel extends JPanel {
 
 	private PeerNew mainThread;
 	
-	public FriendsPanel(List<User> friendsList, PeerNew mainThread){
+	public void  updateTable(JTable jTable1){
+		jTable1.setModel(new FinalTableModelFriendsList(mainThread.getFriends()));
+		jTable1.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+		jTable1.getColumnModel().getColumn(0).setMaxWidth(20);
+		jTable1.getColumnModel().getColumn(1).setPreferredWidth(100);
+		
+		//hide id column (although it's removed, the data remains there)
+		jTable1.removeColumn(jTable1.getColumnModel().getColumn(2));
+	}
+	
+	public FriendsPanel(PeerNew mainThread){
 		super();
 		this.mainThread = mainThread;
 		
@@ -33,10 +44,7 @@ public class FriendsPanel extends JPanel {
 		
 		//TABLE OF FRIENDS
 		JTable jTable1 = new javax.swing.JTable();
-		jTable1.setModel(new FinalTableModelFriendsList(friendsList));
-		jTable1.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-		jTable1.getColumnModel().getColumn(0).setMaxWidth(20);
-		jTable1.getColumnModel().getColumn(1).setPreferredWidth(100);
+		updateTable(jTable1);
 		
 		//add scroll
 		JScrollPane listScroller = new JScrollPane(jTable1);
@@ -44,8 +52,6 @@ public class FriendsPanel extends JPanel {
 		listScroller.setPreferredSize(d);
 		this.add(listScroller, BorderLayout.NORTH);
 		
-		//hide id column (although it's removed, the data remains there)
-		jTable1.removeColumn(jTable1.getColumnModel().getColumn(2));
 		
 		
 		//right click event listener
@@ -92,6 +98,16 @@ public class FriendsPanel extends JPanel {
 			JButton refreshListButton = new JButton("<html><center>Refresh<br>Friends List</center></html>");
 			refreshListButton.setPreferredSize(new Dimension(100, 50));		
 			bottomButtons.add(refreshListButton, BorderLayout.EAST);
+			refreshListButton.addActionListener(new ActionListener()
+			{
+				@Override	
+				public void actionPerformed(ActionEvent e){
+					mainThread.getFriendsFromServer();
+					updateTable(jTable1);
+				}
+			});
+			
+			
 			
 		this.add(bottomButtons, BorderLayout.SOUTH);
 			
