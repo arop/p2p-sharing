@@ -1,4 +1,4 @@
-package ui.mainFrame;
+package ui.addFriendsFrame;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,7 +8,7 @@ import user.User;
 
  
 
-public class FinalTableModelFriendsList extends AbstractTableModel {
+public class FinalTableModelUserList extends AbstractTableModel {
 
 
 	private static final long serialVersionUID = 1L;
@@ -16,7 +16,7 @@ public class FinalTableModelFriendsList extends AbstractTableModel {
 	private List<User> li = new ArrayList<User>();
     private String[] columnNames = {"", "Friends", "id"};
 
-    public FinalTableModelFriendsList(List<User> list){
+    public FinalTableModelUserList(List<User> list){
          this.li = list;
   
     }

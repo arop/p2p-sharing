@@ -17,7 +17,7 @@ import javax.swing.ListSelectionModel;
 
 import peer.PeerNew;
 import ui.addFriendsFrame.AddFriendsWindow;
-import friends.Friend;
+import user.User;
 
 public class FriendsPanel extends JPanel {
 
@@ -25,7 +25,7 @@ public class FriendsPanel extends JPanel {
 
 	private PeerNew mainThread;
 	
-	public FriendsPanel(List<Friend> friendsList, PeerNew mainThread){
+	public FriendsPanel(List<User> friendsList, PeerNew mainThread){
 		super();
 		this.mainThread = mainThread;
 		

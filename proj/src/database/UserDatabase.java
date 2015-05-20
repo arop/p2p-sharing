@@ -141,6 +141,28 @@ public class UserDatabase {
 	    }
 	}
 	
+	public boolean checkIfFriend(int id1, int id2){
+		Statement stmt = null;
+	    boolean result = false;
+	    try {
+		  Class.forName("org.sqlite.JDBC");
+		  con.setAutoCommit(false);
+		
+		  stmt = con.createStatement();
+		  ResultSet rs = stmt.executeQuery( "SELECT * FROM Friend "
+		  		+ "WHERE id1="+id1+" AND id2="+id2+";");
+		  if (!rs.isClosed()) //FRIENDSHIP exists
+			  result = true;
+
+	      rs.close();
+	      stmt.close();
+	    } catch ( Exception e ) {
+	      System.err.println( e.getClass().getName() + ": " + e.getMessage() );
+	      return false;
+	    }
+		
+		return result;
+	}
 	
 	public String login(String email, String password){
 		
@@ -173,6 +195,65 @@ public class UserDatabase {
 		  while(rs.next()){
 			  User user;
 			  if ((user = getUserFromResultSet(rs, complete)) != null)
+				  users.add(user);
+		  }
+		  
+	      rs.close();
+	      stmt.close();
+	      //con.close();
+	    } catch ( Exception e ) {
+	      System.err.println( e.getClass().getName() + ": " + e.getMessage() );
+	      System.exit(0);
+	    }
+		return users;
+	}
+
+	/**
+	 * 
+	 * @param user_id
+	 * @param i
+	 */
+	public String addFriend(int user_id, int other_user) {
+		
+		if (checkIfFriend(user_id, other_user))
+			return "success";
+		
+		Statement stmt = null;
+	    try {
+	    	Class.forName("org.sqlite.JDBC");	
+		    con.setAutoCommit(false);
+	
+		    stmt = con.createStatement();
+		    String sql = "INSERT INTO Friend (id1,id2) " +
+		                 "VALUES ("+user_id+", "+other_user+");"; 
+		    stmt.executeUpdate(sql);
+		    stmt.close();
+		    con.commit();
+	    } catch ( Exception e ) {
+	    	System.err.println( e.getClass().getName() + ": " + e.getMessage() );
+	    	return "error";
+	    }
+	    
+	    return "success";
+		
+	}
+	
+	public ArrayList<User> getFriends(int user_id) {
+
+	    Statement stmt = null;
+	    ArrayList<User> users = new ArrayList<User>();
+	    
+	    try {
+		  Class.forName("org.sqlite.JDBC");		
+		  stmt = con.createStatement();
+		  ResultSet rs = stmt.executeQuery( "SELECT * FROM Friend WHERE id1 = "+user_id+";" );
+		  
+		  if (rs.isClosed()) //no users with this email
+			  return users;
+		  
+		  while(rs.next()){
+			  User user;
+			  if ((user = getUserFromResultSet(rs, false)) != null)
 				  users.add(user);
 		  }
 		  

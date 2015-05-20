@@ -1,4 +1,4 @@
-package ui.mainFrame;
+package ui.addFriendsFrame;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -11,7 +11,7 @@ import javax.swing.border.EmptyBorder;
 
 import user.User;
 
-class FriendCellRenderer extends JLabel implements ListCellRenderer<Object> {
+class UserCellRenderer extends JLabel implements ListCellRenderer<Object> {
 	
 
 	private static final long serialVersionUID = 1L;
@@ -20,7 +20,7 @@ class FriendCellRenderer extends JLabel implements ListCellRenderer<Object> {
 
     final String SEPARATOR = "SEPARATOR";
 	
-	public FriendCellRenderer() {    
+	public UserCellRenderer() {    
 		setOpaque(true);
 		//setIconTextGap(12);
 		setBorder(new EmptyBorder(1, 1, 1, 1));

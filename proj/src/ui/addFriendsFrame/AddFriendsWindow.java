@@ -19,7 +19,6 @@ public class AddFriendsWindow extends JFrame{
         this.setMinimumSize(new Dimension(300,500));
         //setSize(300, 200);
         setLocationRelativeTo(null);
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
         setResizable(false);
         
         ArrayList<User> list = mainThread.getAllUsersFromServer();
@@ -30,6 +29,11 @@ public class AddFriendsWindow extends JFrame{
              	System.out.println(u.toString());
              }
         }
+        
+        this.add(new UsersPanel(list,mainThread));
+        
+        this.pack();
+        this.setVisible(true);
        
 	}
 

@@ -12,7 +12,7 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 import peer.PeerNew;
-import friends.Friend;
+import user.User;
 import friends.FriendCircle;
 
 public class GUI extends JFrame {
@@ -27,7 +27,7 @@ public class GUI extends JFrame {
         initUI();
     }
 
-	public List<Friend> friendsList;
+	public List<User> friendsList;
 	
     private void initUI() {
         
@@ -41,15 +41,15 @@ public class GUI extends JFrame {
        // this.setLayout(grid);
         
         //retrieve friends list from file? server?
-        Friend[] friends = {new Friend(1, "norim"), new Friend(2,"joao"), new Friend(3,"filipe"), new Friend(4,"mira"), new Friend(5,"pires"),
-        		new Friend(1, "norim"), new Friend(2,"joao"), new Friend(3,"filipe"), new Friend(4,"mira"), new Friend(5,"pires"),
-        		new Friend(1, "norim"), new Friend(2,"joao"), new Friend(3,"filipe"), new Friend(4,"mira"), new Friend(5,"pires"),
-        		new Friend(1, "norim"), new Friend(2,"joao"), new Friend(3,"filipe"), new Friend(4,"mira"), new Friend(5,"pires"),
-        		new Friend(1, "norim"), new Friend(2,"joao"), new Friend(3,"filipe"), new Friend(4,"mira"), new Friend(5,"pires"),
-        		new Friend(1, "norim"), new Friend(2,"joao"), new Friend(3,"filipe"), new Friend(4,"mira"), new Friend(5,"pires"),
-        		new Friend(1, "norim"), new Friend(2,"joao"), new Friend(3,"filipe"), new Friend(4,"mira"), new Friend(5,"pires"),
-        		new Friend(1, "norim"), new Friend(2,"joao"), new Friend(3,"filipe"), new Friend(4,"mira"), new Friend(5,"pires")};
-        friendsList = new ArrayList<Friend>(Arrays.asList(friends));
+        User[] friends = {new User(1, "norim"), new User(2,"joao"), new User(3,"filipe"), new User(4,"mira"), new User(5,"pires"),
+        		new User(1, "norim"), new User(2,"joao"), new User(3,"filipe"), new User(4,"mira"), new User(5,"pires"),
+        		new User(1, "norim"), new User(2,"joao"), new User(3,"filipe"), new User(4,"mira"), new User(5,"pires"),
+        		new User(1, "norim"), new User(2,"joao"), new User(3,"filipe"), new User(4,"mira"), new User(5,"pires"),
+        		new User(1, "norim"), new User(2,"joao"), new User(3,"filipe"), new User(4,"mira"), new User(5,"pires"),
+        		new User(1, "norim"), new User(2,"joao"), new User(3,"filipe"), new User(4,"mira"), new User(5,"pires"),
+        		new User(1, "norim"), new User(2,"joao"), new User(3,"filipe"), new User(4,"mira"), new User(5,"pires"),
+        		new User(1, "norim"), new User(2,"joao"), new User(3,"filipe"), new User(4,"mira"), new User(5,"pires")};
+        friendsList = new ArrayList<User>(Arrays.asList(friends));
         
         List<FriendCircle> circles = new ArrayList<FriendCircle>();
         circles.add(new FriendCircle("Circle 1", friendsList.subList(2, 6)));
