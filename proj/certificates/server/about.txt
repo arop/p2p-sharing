@@ -1,0 +1,2 @@
+keystore contains privete key of peer2server
+password: peerkey

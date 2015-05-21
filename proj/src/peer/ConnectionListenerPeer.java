@@ -1,4 +1,4 @@
-package server;
+package peer;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -25,13 +25,11 @@ import com.sun.net.ssl.internal.ssl.Provider;
 
 import extra.Tools;
 
-public class ConnectionListenerServer extends Thread{
-	private int port; // Port where the SSL Server needs to listen for new requests from the client
-	private Server mainThread;
+public class ConnectionListenerPeer extends Thread{
+	private PeerNew mainThread;
 	
-	public ConnectionListenerServer(int port, Server server){
-		this.port = port;
-		this.mainThread = server;
+	public ConnectionListenerPeer(PeerNew peer){
+		this.mainThread = peer;
 	}
 	
 	@Override
@@ -41,8 +39,8 @@ public class ConnectionListenerServer extends Thread{
 			Security.addProvider(new Provider());
 	
 			//Specifying the Keystore details
-			System.setProperty("javax.net.ssl.keyStore","..\\certificates\\server\\keystore");
-			System.setProperty("javax.net.ssl.keyStorePassword","peerkey");
+			System.setProperty("javax.net.ssl.keyStore","..\\certificates\\peer\\keystore");
+			System.setProperty("javax.net.ssl.keyStorePassword","serverkey");
 	
 			// Enable debugging to view the handshake and communication which happens between the SSLClient and the SSLServer
 			// System.setProperty("javax.net.debug","all");
@@ -56,22 +54,11 @@ public class ConnectionListenerServer extends Thread{
 				
 				// Initialize the Server Socket
 				SSLServerSocketFactory sslServerSocketfactory = (SSLServerSocketFactory)SSLServerSocketFactory.getDefault();
-				sslServerSocket = (SSLServerSocket)sslServerSocketfactory.createServerSocket(this.port);
+				sslServerSocket = (SSLServerSocket)sslServerSocketfactory.createServerSocket(this.mainThread.getLocalUser().getPort());
 				sslSocket = (SSLSocket)sslServerSocket.accept();
-
 				
-				// Create Input / Output Streams for communication with the client
-					
 				PrintWriter out = new PrintWriter(sslSocket.getOutputStream(), true); //vai responder por aqui
 		        BufferedReader in = new BufferedReader(new InputStreamReader(sslSocket.getInputStream())); //lê daqui
-		        
-		        /*String inputLine;
-		         String message = "";
-		        while ((inputLine = in.readLine()) != null) {
-		            message += inputLine; 
-		        	out.println(inputLine);
-		            System.out.println("message received: \n	"+inputLine);
-		        }*/
 		        
 		        String inputLine = in.readLine();
 		        inputLine += in.readLine();
@@ -100,12 +87,10 @@ public class ConnectionListenerServer extends Thread{
 				System.out.println(" Exception occurred .... " +exp);
 				//exp.printStackTrace();
 				
-				
 		        try {
 					sslSocket.close();
 					sslServerSocket.close();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					System.out.println("erro no while read server");
 					//e.printStackTrace();
 				}
@@ -126,44 +111,8 @@ public class ConnectionListenerServer extends Thread{
 		Gson gson = new Gson();;
 		
 		switch(messageHeadParts[0]) {
-		case "GETALLUSERS":
-			//GETALLUSERS <Version> <CRLF><CRLF>
-			return Tools.generateJsonMessage("USERS", this.mainThread.getAllUsersEssencials());
-		case "ADDFRIENDS": 
-			//ADDFRIENDS <Version> <User id> <CRLF><CRLF> JSON of int[] users ids
-
-			user_id = Integer.parseInt(messageHeadParts[2]);
-
-			Type arrayOfIntsType = new TypeToken<int[]>(){}.getType();
-			int[] users_ids = gson.fromJson(Tools.getBody(message), arrayOfIntsType);
-
-			if (this.mainThread.addFriendsToUser(user_id, users_ids))
-				return Tools.generateMessage("OK");
-			return Tools.generateMessage("NOTOK");
-		
-		case "GETFRIENDS": 
-			//ADDFRIENDS <Version> <User id> <CRLF><CRLF> JSON of int[] users ids
-			user_id = Integer.parseInt(messageHeadParts[2]);
-			
-			ArrayList<User> userList = this.mainThread.getFriendsOfUser(user_id);
-			
-			Type arrayListOfUsers = new TypeToken<ArrayList<User>>(){}.getType();
-			String json_data = gson.toJson(userList, arrayListOfUsers);
-			
-			return Tools.generateJsonMessage("FRIENDS", json_data);
-	
-		case "LOGIN":
-			
-			String[] loginparts = Tools.getBody(message).split(" ");
-			
-			System.out.println("Username: " + loginparts[0]);
-			System.out.println("Password: " + loginparts[1]);
-
-			
-			if(mainThread.login(loginparts[0],loginparts[1]))
-				return Tools.generateMessage("OK");
-			return Tools.generateMessage("NOTOK");
-		
+		case "ISONLINE":
+			return Tools.generateMessage("OK");
 			
 		default:
 			break;				

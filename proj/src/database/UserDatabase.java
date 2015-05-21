@@ -239,7 +239,6 @@ public class UserDatabase {
 	}
 	
 	public ArrayList<User> getFriends(int user_id) {
-
 	    Statement stmt = null;
 	    ArrayList<User> users = new ArrayList<User>();
 	    
@@ -247,10 +246,10 @@ public class UserDatabase {
 		  Class.forName("org.sqlite.JDBC");		
 		  stmt = con.createStatement();
 		  ResultSet rs = stmt.executeQuery( "SELECT * FROM Friend WHERE id1 = "+user_id+";" );
-		  
-		  if (rs.isClosed()) //no users with this email
+	
+		  if (rs.isClosed()) //no friends
 			  return users;
-		  
+
 		  //iterate friends ids
 		  while(rs.next()){
 			  int id =  rs.getInt("id2");
@@ -261,18 +260,21 @@ public class UserDatabase {
 			  User user;
 			  if ((user = getUserFromResultSet(rs2, false)) != null)
 				  users.add(user);
+
 			  //close connections
 			  rs2.close();
 			  stmt2.close();
 		  }
 		  
-		  
+
 	      rs.close();
 	      stmt.close();
 	      //con.close();
 	    } catch ( Exception e ) {
-	      System.err.println( e.getClass().getName() + ": " + e.getMessage() );
-	      System.exit(0);
+	      //System.err.println( e.getClass().getName() + ": " + e.getMessage() );
+	    	System.out.println("Problem in databse fetchg: "+e.getClass().getName());
+	      //System.exit(0);
+	      return users;
 	    }
 		return users;
 	}

@@ -1,0 +1,5 @@
+truststore contains both certificates (server2peer and peer2server)
+password: serverkeytrust
+
+keystore contains privete key of server2peer
+password: serverkey

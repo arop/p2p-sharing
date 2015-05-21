@@ -58,7 +58,6 @@ public class LoginFrame extends JFrame {
 			@Override	
 			public void actionPerformed(ActionEvent e){
 				if(mainThread.login(username.getText(),new String(password.getPassword()))) {
-					System.out.println("ENTROU AQUI");
 					setSuccess(true); 
 				}
 			}
