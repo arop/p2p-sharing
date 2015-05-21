@@ -152,6 +152,19 @@ public class ConnectionListenerServer extends Thread{
 			
 			return Tools.generateJsonMessage("FRIENDS", json_data);
 	
+		case "LOGIN":
+			
+			String[] loginparts = Tools.getBody(message).split(" ");
+			
+			System.out.println("Username: " + loginparts[0]);
+			System.out.println("Password: " + loginparts[1]);
+
+			
+			if(mainThread.login(loginparts[0],loginparts[1]))
+				return Tools.generateMessage("OK");
+			return Tools.generateMessage("NOTOK");
+		
+			
 		default:
 			break;				
 		}

@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
+import ui.loginFrame.LoginFrame;
 import ui.mainFrame.GUI;
 import user.User;
 
@@ -31,14 +32,15 @@ public class PeerNew {
 	public PeerNew(){
 		
 		//TODO -> LOGIN in server
-		User local = new User(1, "norim_13");
-		this.setLocalUser(local);
-		this.friends = new ArrayList<User>();//initialize list
-		this.getFriendsFromServer(); //update list with values from server
+		
 	}
 	
 	
 	private static int connection_try_number = 0;
+	
+	private LoginFrame loginFrame;
+	private GUI mainFrame;
+	
 	/**
 	 * 
 	 * @param msg
@@ -147,13 +149,32 @@ public class PeerNew {
 	}
 	
 	
+	
 	public static void main(String[] args){
 		PeerNew peer = new PeerNew();
+		peer.startPeer();
 		
-		GUI gui = new GUI(peer);
+	}
+	
+	public void startPeer(){
+		loginFrame = new LoginFrame(this);
+		
+		
+		while(!loginFrame.isSuccess()) {	
+			//System.out.println(loginFrame.isSuccess());
+		}
+		loginFrame.dispose();
+		
+		User local = new User(1, "norim_13");
+		this.setLocalUser(local);
+		this.friends = new ArrayList<User>();//initialize list
+		this.getFriendsFromServer(); //update list with values from server
+		
+		GUI gui = new GUI(this);
 		gui.setVisible(true);
 		
 	}
+	
 
 	public User getLocalUser() {
 		return localUser;
@@ -165,6 +186,13 @@ public class PeerNew {
 	
 	public ArrayList<User> getFriends(){
 		return this.friends;
+	}
+
+	
+	public boolean login(String username, String password) {
+		String messagebody = username + " " + password;
+		String response = this.sendMessage(Tools.generateJsonMessage("LOGIN",messagebody), serverAddress, serverPort);
+		return Tools.getType(response).equals("OK");
 	}
 	
 }

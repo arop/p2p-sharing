@@ -2,9 +2,9 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
-	<classpathentry kind="lib" path="C:/Users/João/workspace/SDIS 2/proj/jars/restfb-1.10.1.jar"/>
-	<classpathentry kind="lib" path="C:/Users/João/workspace/SDIS 2/proj/jars/sqlite-jdbc-3.8.10.1.jar"/>
-	<classpathentry kind="lib" path="C:/Users/João/workspace/SDIS 2/proj/jars/com.sun.net.ssl.jar"/>
-	<classpathentry kind="lib" path="C:/Users/João/workspace/SDIS 2/proj/jars/gson-2.3.1.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Filipe Gama/workspace/sdis-proj/proj/jars/com.sun.net.ssl.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Filipe Gama/workspace/sdis-proj/proj/jars/gson-2.3.1.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Filipe Gama/workspace/sdis-proj/proj/jars/restfb-1.10.1.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Filipe Gama/workspace/sdis-proj/proj/jars/sqlite-jdbc-3.8.10.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
