@@ -1,4 +1,6 @@
-java -classpath ".;..\jars\sqlite-jdbc-3.8.10.1.jar"  -Djavax.net.ssl.keyStore=keystore -Djavax.net.ssl.keyStorePassword=password server.Server
+java -classpath ".;..\jars\sqlite-jdbc-3.8.10.1.jar;..\jars\gson-2.3.1.jar"  -Djavax.net.ssl.keyStore=keystore -Djavax.net.ssl.keyStorePassword=password server.Server
+
+java -classpath ".;..\jars\gson-2.3.1.jar" -Djavax.net.ssl.trustStore=..\certificates\peer\truststore -Djavax.net.ssl.trustStorePassword=serverkeytrust peer.PeerNew
 
 java -Djavax.net.ssl.trustStore=truststore -Djavax.net.ssl.trustStorePassword=sida123 Client
 

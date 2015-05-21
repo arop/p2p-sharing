@@ -1,1 +1,1 @@
-java -classpath ".;..\jars\gson-2.3.1.jar" -Djavax.net.ssl.trustStore=..\certificates\truststore -Djavax.net.ssl.trustStorePassword=sida123 peer.PeerNew
+java -classpath ".;..\jars\gson-2.3.1.jar" -Djavax.net.ssl.trustStore=..\certificates\peer\truststore -Djavax.net.ssl.trustStorePassword=serverkeytrust peer.PeerNew

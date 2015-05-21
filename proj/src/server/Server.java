@@ -61,8 +61,8 @@ public class Server {
 	public static void main(String[] args){
 		Server server = new Server();
 		
-		server.registerUser("norim_13", "a", "norim_13@hotmail.com", "", 4444);
-		server.registerUser("norim_14", "a", "norim_14@hotmail.com", "", 4444);
+		server.registerUser("norim_13", "a", "norim_13@hotmail.com", "localhost", 4444);
+		server.registerUser("norim_14", "a", "norim_14@hotmail.com", "localhost", 4445);
 
 		server.login("norim_13@hotmail.com", "a"); //success
 		

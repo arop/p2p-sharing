@@ -6,12 +6,14 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.lang.reflect.Type;
 import java.net.ConnectException;
+import java.net.SocketTimeoutException;
 import java.security.Security;
 import java.util.ArrayList;
 
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
+import server.ConnectionListenerServer;
 import ui.loginFrame.LoginFrame;
 import ui.mainFrame.GUI;
 import user.User;
@@ -31,7 +33,6 @@ public class PeerNew {
 	
 	public PeerNew(){
 		
-		//TODO -> LOGIN in server
 		
 	}
 	
@@ -54,15 +55,18 @@ public class PeerNew {
 			Security.addProvider(new Provider());
 		}
 		
+		int timeout = 5000; //timeout in miliseconds
+		
 		SSLSocketFactory sslsocketfactory = (SSLSocketFactory)SSLSocketFactory.getDefault();
 		SSLSocket sslSocket;
+		
 		PrintWriter out = null;
         BufferedReader in = null;
         String response = null;
         
 		try {
 			sslSocket = (SSLSocket)sslsocketfactory.createSocket(ip_dest,port_dest);
-			
+			sslSocket.setSoTimeout(timeout);
 			
 			// Initializing the streams for Communication with the Server
          	out = new PrintWriter(sslSocket.getOutputStream(), true);
@@ -75,7 +79,7 @@ public class PeerNew {
 			response = in.readLine();
 			response += in.readLine(); //TODO (isto está assim hardcoded pq o 
 			response += "\r\n\r\n"+in.readLine(); //readLine lê até ao \r\n apenas)
-			System.out.println("HERE22::"+response);
+	
 			//PARSE RESPONSE
 			String origin_ip = sslSocket.getInetAddress().getHostAddress();
 			//System.out.println("response: " + response + "#" + origin_ip);
@@ -86,10 +90,19 @@ public class PeerNew {
 			sslSocket.close();		
 			
 		} 
+		catch (SocketTimeoutException e){
+			System.out.println("timeout");
+			if (++connection_try_number > 3){
+				connection_try_number = 0;
+				//e.printStackTrace();
+				return null;
+			}
+			System.out.println("try: "+connection_try_number);
+		}
 		catch (ConnectException e){
 			if (++connection_try_number > 3){
 				connection_try_number = 0;
-				e.printStackTrace();
+				//e.printStackTrace();
 				return null;
 			}
 			System.out.println("try: "+connection_try_number);
@@ -143,11 +156,9 @@ public class PeerNew {
 		Gson gson = new Gson();
 		String json_data = gson.toJson(user_ids);
 		String response = this.sendMessage(Tools.generateJsonMessage("ADDFRIENDS", localUser.getId(), json_data), serverAddress, serverPort);
-		//System.out.println("response: #"+response+"#");
-		System.out.println("HERE::"+response);
+		
 		return Tools.getType(response).equals("OK");
 	}
-	
 	
 	
 	public static void main(String[] args){
@@ -157,21 +168,27 @@ public class PeerNew {
 	}
 	
 	public void startPeer(){
-		loginFrame = new LoginFrame(this);
 		
-		
+		/*loginFrame = new LoginFrame(this);
 		while(!loginFrame.isSuccess()) {	
 			//System.out.println(loginFrame.isSuccess());
 		}
-		loginFrame.dispose();
+		loginFrame.dispose();*/
 		
-		User local = new User(1, "norim_13");
+		User local = new User(1, "norim_13", "norim_13@hotmail.com",null,null, 4444);
 		this.setLocalUser(local);
 		this.friends = new ArrayList<User>();//initialize list
+
 		this.getFriendsFromServer(); //update list with values from server
-		
+
 		GUI gui = new GUI(this);
 		gui.setVisible(true);
+		
+		//connection listener -> thread always reading in user's port.
+		ConnectionListenerPeer con_listener = new ConnectionListenerPeer(this);
+		con_listener.start();
+		
+		
 		
 	}
 	
