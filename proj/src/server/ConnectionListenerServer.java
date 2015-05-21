@@ -28,70 +28,67 @@ import extra.Tools;
 public class ConnectionListenerServer extends Thread{
 	private int port; // Port where the SSL Server needs to listen for new requests from the client
 	private Server mainThread;
-	
+
 	public ConnectionListenerServer(int port, Server server){
 		this.port = port;
 		this.mainThread = server;
 	}
-	
+
 	@Override
 	public void run() {
 		{
 			// Registering the JSSE provider
 			Security.addProvider(new Provider());
-	
+
 			//Specifying the Keystore details
 			System.setProperty("javax.net.ssl.keyStore","..\\certificates\\server\\keystore");
 			System.setProperty("javax.net.ssl.keyStorePassword","peerkey");
-	
+
 			// Enable debugging to view the handshake and communication which happens between the SSLClient and the SSLServer
 			// System.setProperty("javax.net.debug","all");
 		}
-		
+
 		SSLServerSocket sslServerSocket = null;
 		SSLSocket sslSocket = null ;
-		
+
 		while(true){
 			try {
-				
 				// Initialize the Server Socket
 				SSLServerSocketFactory sslServerSocketfactory = (SSLServerSocketFactory)SSLServerSocketFactory.getDefault();
 				sslServerSocket = (SSLServerSocket)sslServerSocketfactory.createServerSocket(this.port);
 				sslSocket = (SSLSocket)sslServerSocket.accept();
 
-				
 				// Create Input / Output Streams for communication with the client
-					
 				PrintWriter out = new PrintWriter(sslSocket.getOutputStream(), true); //vai responder por aqui
-		        BufferedReader in = new BufferedReader(new InputStreamReader(sslSocket.getInputStream())); //lê daqui
-		        
-		        /*String inputLine;
+				BufferedReader in = new BufferedReader(new InputStreamReader(sslSocket.getInputStream())); //lê daqui
+
+				/*String inputLine;
 		         String message = "";
 		        while ((inputLine = in.readLine()) != null) {
 		            message += inputLine; 
 		        	out.println(inputLine);
 		            System.out.println("message received: \n	"+inputLine);
 		        }*/
-		        
-		        String inputLine = in.readLine();
-		        inputLine += in.readLine();
-		        inputLine+= "\r\n\r\n";
-		        inputLine += in.readLine();
-		        
-		        System.out.println("message received: \n	"+inputLine);
-		        String origin_ip = sslSocket.getInetAddress().getHostAddress();
-		        //PROCESS RECEIVED MESSAGE
-		        System.out.println("	from: "+origin_ip);
-		        String responseMessage = this.parseReceivedMessage(inputLine);
-		        //SEND RESPONSE
-		        out.println(responseMessage);
-		        System.out.println("Answer sent!");
-		        // Close the streams and the socket
-		        out.close();
-		        in.close();
-		        sslSocket.close();
-		        sslServerSocket.close();	
-				
+
+				String inputLine = in.readLine();
+				inputLine += in.readLine();
+				inputLine+= "\r\n\r\n";
+				inputLine += in.readLine();
+
+				System.out.println("message received: \n	"+inputLine);
+				String origin_ip = sslSocket.getInetAddress().getHostAddress();
+				//PROCESS RECEIVED MESSAGE
+				System.out.println("	from: "+origin_ip);
+				String responseMessage = this.parseReceivedMessage(inputLine);
+				//SEND RESPONSE
+				out.println(responseMessage);
+				System.out.println("Answer sent!");
+				// Close the streams and the socket
+				out.close();
+				in.close();
+				sslSocket.close();
+				sslServerSocket.close();	
+
 			}
 			catch(Exception exp)
 			{
@@ -99,22 +96,17 @@ public class ConnectionListenerServer extends Thread{
 				System.out.println(" Priv exp --- " + priexp.getMessage());
 				System.out.println(" Exception occurred .... " +exp);
 				//exp.printStackTrace();
-				
-				
-		        try {
+
+				try {
 					sslSocket.close();
 					sslServerSocket.close();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					System.out.println("erro no while read server");
-					//e.printStackTrace();
 				}
-		        
 			}
 		}
-		
 	}
-	
+
 	/**
 	 * parses received message, executes action, and generates response.
 	 * @param message
@@ -124,7 +116,7 @@ public class ConnectionListenerServer extends Thread{
 		String[] messageHeadParts = Tools.getHead(message).split(" +");
 		int user_id;
 		Gson gson = new Gson();;
-		
+
 		switch(messageHeadParts[0]) {
 		case "GETALLUSERS":
 			//GETALLUSERS <Version> <CRLF><CRLF>
@@ -140,18 +132,23 @@ public class ConnectionListenerServer extends Thread{
 			if (this.mainThread.addFriendsToUser(user_id, users_ids))
 				return Tools.generateMessage("OK");
 			return Tools.generateMessage("NOTOK");
-		
+
 		case "GETFRIENDS": 
 			//ADDFRIENDS <Version> <User id> <CRLF><CRLF> JSON of int[] users ids
 			user_id = Integer.parseInt(messageHeadParts[2]);
-			
+
 			ArrayList<User> userList = this.mainThread.getFriendsOfUser(user_id);
-			
+
 			Type arrayListOfUsers = new TypeToken<ArrayList<User>>(){}.getType();
 			String json_data = gson.toJson(userList, arrayListOfUsers);
-			
+
 			return Tools.generateJsonMessage("FRIENDS", json_data);
-	
+			
+		case "AMONLINE":
+			//AMONLINE <Version> <User id> <CRLF><CRLF>
+			user_id = Integer.parseInt(messageHeadParts[2]);
+			mainThread.addOnlineUser(user_id);
+
 		case "LOGIN":
 			
 			String[] loginparts = Tools.getBody(message).split(" ");
@@ -170,8 +167,4 @@ public class ConnectionListenerServer extends Thread{
 		}
 		return null;
 	}
-	
-	
-	
-	
 }

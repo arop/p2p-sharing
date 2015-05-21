@@ -1,13 +1,24 @@
 package extra;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
+import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
+import java.security.Security;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
+
+import com.sun.net.ssl.internal.ssl.Provider;
 
 import main.Chunk;
 
@@ -38,7 +49,7 @@ public abstract class Tools {
 
 		return m.matches();
 	}
-	
+
 	/**
 	 * 
 	 * @param type
@@ -68,7 +79,7 @@ public abstract class Tools {
 		}
 		return message;
 	}
-	
+
 
 	/**
 	 * DELETE <Version> <FileId> <CRLF><CRLF>
@@ -111,14 +122,14 @@ public abstract class Tools {
 		case "NOTOK":
 			message = "NOTOK " + Tools.getVersion() + "\r\n\r\n";
 			break;
-			  
+
 		default:
 			System.err.println("Invalid Message!");
 			break;
 		}
 		return message;
 	}
-	
+
 	/**
 	 * #proj2
 	 * USERS <Version> <CRLF><CRLF> Json body with users data
@@ -139,7 +150,7 @@ public abstract class Tools {
 		String message = type + " " + Tools.getVersion() + "\r\n\r\n" + json_body ;
 		return message;
 	}
-	
+
 	/**
 	 *  #proj2
 	 *  ADDFRIENDS <Version> <User id> <CRLF><CRLF> JSON of int[] users ids
@@ -153,7 +164,7 @@ public abstract class Tools {
 		String message = type + " " + Tools.getVersion() + " " + user_id + "\r\n\r\n" + json_body ;
 		return message;
 	}
-	
+
 	/**
 	 *  #proj2
 	 *  
@@ -166,8 +177,8 @@ public abstract class Tools {
 		String message = type + " " + Tools.getVersion() + " " + user_id + "\r\n\r\n" ;
 		return message;
 	}
-	
-	
+
+
 	public static String getPeerAddress() throws UnknownHostException {
 		return InetAddress.getLocalHost().getHostAddress();
 	}
@@ -201,7 +212,7 @@ public abstract class Tools {
 	public static void setPacketSize(int packetSizeIn) {
 		packetSize = packetSizeIn;
 	}
-	
+
 	public static void setFolderSize(int folderSizeIn) {
 		folderSize = folderSizeIn;
 	}
@@ -209,7 +220,7 @@ public abstract class Tools {
 	public static long getFolderSize() {
 		return folderSize;
 	}
-	
+
 	/**
 	 * @return the debug
 	 */
@@ -223,11 +234,11 @@ public abstract class Tools {
 	public static void setDebug(boolean debugIn) {
 		debug = debugIn;
 	}
-	
+
 	public static String getVersion() {
 		return version;
 	}
-	
+
 	public static void setVersion(String version) {
 		Tools.version = version;
 	}
@@ -243,7 +254,7 @@ public abstract class Tools {
 		}
 		return port;
 	}
-	
+
 	/**
 	 * 
 	 * @param msg - message received 
@@ -255,7 +266,7 @@ public abstract class Tools {
 			return null;
 		return msg.substring(0,index);
 	}
-	
+
 	/**
 	 * 
 	 * @param msg - message received 
@@ -267,7 +278,7 @@ public abstract class Tools {
 			return null;
 		return msg.substring(index);
 	}
-	
+
 	/**
 	 * 
 	 * @param msg - message received 
@@ -275,7 +286,78 @@ public abstract class Tools {
 	 */
 	public static String getType(String msg) {
 		return msg.split(" +")[0];
-		
+
 	}
 
+	/**
+	 * 
+	 * @param msg
+	 * @param ip_dest
+	 * @param port_dest
+	 * @return response from other peer/server
+	 */
+	public static String sendMessage(String msg, String ip_dest, int port_dest, int connection_try_number){
+		{
+			// Registering the JSSE provider
+			Security.addProvider(new Provider());
+		}
+
+		int timeout = 5000; //timeout in miliseconds
+
+		SSLSocketFactory sslsocketfactory = (SSLSocketFactory)SSLSocketFactory.getDefault();
+		SSLSocket sslSocket;
+
+		PrintWriter out = null;
+		BufferedReader in = null;
+		String response = null;
+
+		try {
+			sslSocket = (SSLSocket)sslsocketfactory.createSocket(ip_dest,port_dest);
+			sslSocket.setSoTimeout(timeout);
+
+			// Initializing the streams for Communication with the Server
+			out = new PrintWriter(sslSocket.getOutputStream(), true);
+			in = new BufferedReader(new InputStreamReader(sslSocket.getInputStream()));
+
+			//SEND MESSAGE
+			out.println(msg);
+
+			//GET RESPONSE 
+			response = in.readLine();
+			response += in.readLine(); 				//TODO (isto está assim hardcoded pq o 
+			response += "\r\n\r\n"+in.readLine(); 	//readLine lê até ao \r\n apenas)
+
+			//PARSE RESPONSE
+			//String origin_ip = sslSocket.getInetAddress().getHostAddress();
+			//System.out.println("response: " + response + "#" + origin_ip);
+
+			// Closing the Streams and the Socket
+			out.close();
+			in.close();
+			sslSocket.close();		
+		} 
+		catch (SocketTimeoutException e){
+			System.out.println("timeout");
+			if (connection_try_number > 3){
+				//e.printStackTrace();
+				return null;
+			}
+			System.out.println("try: "+connection_try_number);
+			return Tools.sendMessage(msg, ip_dest, port_dest,connection_try_number+1);
+		}
+		catch (ConnectException e){
+			if (connection_try_number > 3){
+				//e.printStackTrace();
+				return null;
+			}
+			System.out.println("try: "+connection_try_number);
+			return Tools.sendMessage(msg, ip_dest, port_dest,connection_try_number+1);
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+			return null;
+		}
+
+		return response;
+	}
 }
