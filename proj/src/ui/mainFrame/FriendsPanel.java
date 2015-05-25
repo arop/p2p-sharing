@@ -6,7 +6,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.List;
 
 import javax.swing.JButton;
 import javax.swing.JPanel;
@@ -15,10 +14,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 
-import friends.FriendCircle;
 import peer.PeerNew;
 import ui.addFriendsFrame.AddFriendsWindow;
-import user.User;
 
 public class FriendsPanel extends JPanel {
 

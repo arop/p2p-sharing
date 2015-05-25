@@ -5,7 +5,6 @@ import java.awt.EventQueue;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.List;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -15,12 +14,9 @@ import javax.swing.JPasswordField;
 import javax.swing.JTextArea;
 
 import peer.PeerNew;
-import user.User;
 
 
 public class LoginFrame extends JFrame {
-
-
 
 	private static final long serialVersionUID = 1L;
 
@@ -33,7 +29,7 @@ public class LoginFrame extends JFrame {
 		setVisible(true);
 	}
 
-	public List<User> friendsList;
+
 
 	private void initUI() {
 

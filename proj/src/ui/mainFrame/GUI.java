@@ -3,8 +3,9 @@ package ui.mainFrame;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.EventQueue;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import javax.swing.JButton;
@@ -13,6 +14,7 @@ import javax.swing.JPanel;
 
 import peer.PeerNew;
 import user.User;
+import extra.Tools;
 import friends.FriendCircle;
 
 public class GUI extends JFrame {
@@ -72,14 +74,26 @@ public class GUI extends JFrame {
     	JButton button = new JButton("Backup File");
     	button.setPreferredSize(new Dimension(buttonWidth, buttonHeight));
     	panel.add(button);
+    	button.addActionListener(new ActionListener()
+		{
+			@Override	
+			public void actionPerformed(ActionEvent e){
+				String filePath;
+				if( (filePath = Tools.selectFileFrame()) != null){
+					System.out.println("This file was selected: "+filePath);
+					mainThread.startRegularBackupProtocol(filePath);
+				}
+			}
+		});
     	
     	button = new JButton("<html><center>Restore<br>File</center></html>");
     	button.setPreferredSize(new Dimension(buttonWidth, buttonHeight));
     	panel.add(button);
-    	
+
     	button = new JButton("Delete File");
     	button.setPreferredSize(new Dimension(buttonWidth, buttonHeight));
     	panel.add(button);
+    	
     	
     	button = new JButton("<html><center>Reclaim<br>Space<center></html>");
     	button.setPreferredSize(new Dimension(buttonWidth, buttonHeight));

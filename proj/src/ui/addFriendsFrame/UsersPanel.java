@@ -49,7 +49,7 @@ public class UsersPanel extends JPanel {
 			//ADD FRIENDS
 			JButton addFriendsButton = new JButton("<html><center>Add Selected<br>Users</center></html>");		
 			bottomButtons.add(addFriendsButton);
-			addFriendsButton.addActionListener(new AddButtonListener(this, jTable1, listScroller, addFriendsButton, mainThread));
+			addFriendsButton.addActionListener(new AddButtonListener(this, jTable1, listScroller, addFriendsButton, this.mainThread));
 		
 		this.add(bottomButtons, BorderLayout.SOUTH);
 			
