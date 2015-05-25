@@ -144,25 +144,41 @@ public class ConnectionListenerServer extends Thread{
 			String json_data = gson.toJson(userList, arrayListOfUsers);
 
 			return Tools.generateJsonMessage("FRIENDS", json_data);
-			
+
 		case "AMONLINE":
 			//AMONLINE <Version> <User id> <CRLF><CRLF>
 			user_id = Integer.parseInt(messageHeadParts[2]);
 			mainThread.addOnlineUser(user_id);
 
 		case "LOGIN":
-			
 			String[] loginparts = Tools.getBody(message).split(" ");
-			
+
 			System.out.println("Username: " + loginparts[0]);
 			System.out.println("Password: " + loginparts[1]);
 
-			
 			if(mainThread.login(loginparts[0],loginparts[1]))
 				return Tools.generateMessage("OK");
 			return Tools.generateMessage("NOTOK");
-		
+
+
+		case "REGISTER":
+			String[] registerParts = Tools.getBody(message).split(" ");
+
+			System.out.println("Username: " + registerParts[0]);
+			System.out.println("Email: " + registerParts[1]);
+			System.out.println("Password: " + registerParts[2]);
+			System.out.println("Port: " + registerParts[3]);
+
 			
+			int temp = Integer.parseInt(registerParts[3]);
+
+			if(mainThread.registerUser(registerParts[0],registerParts[1],registerParts[2],sourceAddress,temp))
+				return Tools.generateMessage("OK");
+			return Tools.generateMessage("NOTOK");
+
+
+
+
 		default:
 			break;				
 		}
