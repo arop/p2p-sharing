@@ -110,4 +110,13 @@ public class PeerNew {
 		PeerNew peer = new PeerNew();
 		peer.startPeer();
 	}
+
+	public void startRegularBackupProtocol(String filePath) {
+		//1 -> get online users IPs and ports form server
+		
+		//2 -> send all chunks to each user (?)
+		
+		
+		
+	}
 }

@@ -17,6 +17,7 @@ import java.util.regex.Pattern;
 
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
+import javax.swing.JFileChooser;
 
 import com.sun.net.ssl.internal.ssl.Provider;
 
@@ -360,4 +361,25 @@ public abstract class Tools {
 
 		return response;
 	}
+
+	/**
+	 * #proj2 
+	 * Launches file selection window. 
+	 * @return Selected file path
+	 */
+	public static String selectFileFrame(){
+		JFileChooser chooser = new JFileChooser();
+	    /*FileNameExtensionFilter filter = new FileNameExtensionFilter(
+	        "JPG & GIF Images", "jpg", "gif");
+	    chooser.setFileFilter(filter);*/
+	    int returnVal = chooser.showOpenDialog(null);
+	    if(returnVal == JFileChooser.APPROVE_OPTION) {
+	       System.out.println("You chose to open this file: " +
+	            chooser.getSelectedFile().getName());
+	       return chooser.getSelectedFile().getPath();
+	    }
+	    return null;
+		
+	}
+
 }

@@ -79,7 +79,7 @@ public class ConnectionListenerServer extends Thread{
 				String origin_ip = sslSocket.getInetAddress().getHostAddress();
 				//PROCESS RECEIVED MESSAGE
 				System.out.println("	from: "+origin_ip);
-				String responseMessage = this.parseReceivedMessage(inputLine);
+				String responseMessage = this.parseReceivedMessage(inputLine, origin_ip);
 				//SEND RESPONSE
 				out.println(responseMessage);
 				System.out.println("Answer sent!");
@@ -110,9 +110,10 @@ public class ConnectionListenerServer extends Thread{
 	/**
 	 * parses received message, executes action, and generates response.
 	 * @param message
+	 * @param sourceAddress Address where the message was sent from.
 	 * @return Response to received message. Null if not applicable.
 	 */
-	public String parseReceivedMessage(String message){
+	public String parseReceivedMessage(String message, String sourceAddress){
 		String[] messageHeadParts = Tools.getHead(message).split(" +");
 		int user_id;
 		Gson gson = new Gson();;
