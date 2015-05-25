@@ -68,11 +68,11 @@ public class PeerNew {
 	}
 
 	public void startPeer(){
-		/*loginFrame = new LoginFrame(this);
+		loginFrame = new LoginFrame(this);
 		while(!loginFrame.isSuccess()) {	
 			//System.out.println(loginFrame.isSuccess());
 		}
-		loginFrame.dispose();*/
+		loginFrame.dispose();
 
 		User local = new User(1, "norim_13", "norim_13@hotmail.com",null,null, 4444);
 		this.setLocalUser(local);
@@ -105,6 +105,18 @@ public class PeerNew {
 		String response = Tools.sendMessage(Tools.generateJsonMessage("LOGIN",messagebody), serverAddress, serverPort,0);
 		return Tools.getType(response).equals("OK");
 	}
+	
+	public boolean register(String username, String email, String password1, String password2, int desiredPort) {
+		if(password1.equals(password2)) {
+			String messagebody = username + " " + email + " " + password1 + " " + desiredPort;
+			String response = Tools.sendMessage(Tools.generateJsonMessage("REGISTER",messagebody), serverAddress, serverPort,0);
+			return Tools.getType(response).equals("OK");
+		}
+		
+		
+		return false;
+	}
+	
 
 	public static void main(String[] args){
 		PeerNew peer = new PeerNew();
@@ -119,4 +131,6 @@ public class PeerNew {
 		
 		
 	}
+
+	
 }

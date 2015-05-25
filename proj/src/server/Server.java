@@ -19,12 +19,13 @@ public class Server {
 		onlineUsers = new ArrayList<Integer>();
 	}
 
-	public void registerUser(String username, String password, String email, String ip, int port){
-
+	public boolean registerUser(String username, String password, String email, String ip, int port){
 		String registerResponse;
 		if (!(registerResponse = user_db.registerUser(username, email, password, ip, port)).equals("success")){
 			System.out.println(registerResponse);
+			return false;
 		}
+		return true;
 	}
 
 	public boolean login(String email, String password){

@@ -14,6 +14,7 @@ import javax.swing.JPasswordField;
 import javax.swing.JTextArea;
 
 import peer.PeerNew;
+import ui.registerFrame.RegisterFrame;
 
 
 public class LoginFrame extends JFrame {
@@ -22,6 +23,8 @@ public class LoginFrame extends JFrame {
 
 	private boolean success = false;
 	private PeerNew mainThread;
+	private RegisterFrame registerForm;
+	
 
 	public LoginFrame(PeerNew peer) {
 		mainThread = peer;
@@ -33,7 +36,7 @@ public class LoginFrame extends JFrame {
 
 	private void initUI() {
 
-		setTitle("Distributed Backup System");
+		setTitle("Login");
 		this.setMinimumSize(new Dimension(200,200));
 		//setSize(300, 200);
 		setLocationRelativeTo(null);
@@ -49,6 +52,9 @@ public class LoginFrame extends JFrame {
 
 		JButton loginButton = new JButton("Login");
 		
+		JButton registerButton = new JButton("No account? Join us now!");
+
+		
 		loginButton.addActionListener(new ActionListener()
 		{
 			@Override	
@@ -58,10 +64,21 @@ public class LoginFrame extends JFrame {
 				}
 			}
 		});
+		
+		registerButton.addActionListener(new ActionListener()
+		{
+			@Override	
+			public void actionPerformed(ActionEvent e){
+				registerForm = new RegisterFrame(mainThread);
+				registerForm.setVisible(true);
+			}
+		});
+	
+		
 	
 		JPanel loginForm = new JPanel();
 		
-		GridLayout grid = new GridLayout(5,1);
+		GridLayout grid = new GridLayout(6,1);
 		
 		loginForm.setLayout(grid);		
 		
@@ -70,6 +87,8 @@ public class LoginFrame extends JFrame {
 		loginForm.add(passwordLabel);
 		loginForm.add(password);
 		loginForm.add(loginButton);
+		loginForm.add(registerButton);
+
 			
 		this.add(loginForm);
 		
