@@ -7,7 +7,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.JButton;
-import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -37,21 +36,21 @@ public class RegisterFrame extends JFrame {
 		setLocationRelativeTo(null);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		setResizable(false);
-		
+
 		JTextArea username = new JTextArea();
 		JTextArea email = new JTextArea();
 		JPasswordField password = new JPasswordField();
 		JPasswordField rePassword = new JPasswordField();
 		JSpinner port = new JSpinner();
-		
-		
+
+
 		JLabel usernameLabel = new JLabel("Desired username");
 		JLabel emailLabel = new JLabel("Email");
 		JLabel passwordLabel = new JLabel("Desired password");
 		JLabel rePasswordLabel = new JLabel("Reenter your password");
 		JLabel portLabel = new JLabel("Which port do you want to use");
 
-		
+
 		JButton registerButton = new JButton("Submit");
 
 		registerButton.addActionListener(new ActionListener()
@@ -63,15 +62,15 @@ public class RegisterFrame extends JFrame {
 				}
 			}
 		});
-		
-	
-	
+
+
+
 		JPanel registerForm = new JPanel();
-		
+
 		GridLayout grid = new GridLayout(11,1);
-		
+
 		registerForm.setLayout(grid);		
-		
+
 		registerForm.add(usernameLabel);
 		registerForm.add(username);
 		registerForm.add(emailLabel);
@@ -83,10 +82,10 @@ public class RegisterFrame extends JFrame {
 		registerForm.add(portLabel);
 		registerForm.add(port);
 		registerForm.add(registerButton);
-			
+
 		this.add(registerForm);
-		
-		
+
+
 		this.pack();
 	}
 

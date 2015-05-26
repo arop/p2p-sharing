@@ -2,13 +2,9 @@ package server;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.net.ConnectException;
-import java.net.SocketTimeoutException;
 import java.security.KeyStore;
-import java.security.Security;
 import java.util.ArrayList;
 
 import javax.net.ssl.SSLContext;
@@ -17,7 +13,6 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManagerFactory;
 
 import com.google.gson.Gson;
-import com.sun.net.ssl.internal.ssl.Provider;
 
 import user.User;
 import database.UserDatabase;
@@ -55,13 +50,13 @@ public class Server {
 	 * @param password
 	 * @return user id
 	 */
-	public int login(String email, String password){
-		int user_id;
-		if ((user_id = user_db.login(email, password)) < 0 ){
-			return -1;
+	public User login(String email, String password){
+		User user;
+		if ((user = user_db.login(email, password)) == null){
+			return null;
 		}
 		System.out.println("Login successful");
-		return user_id;
+		return user;
 	}
 
 	/**
@@ -199,7 +194,7 @@ public class Server {
 
 		server.login("norim_13@hotmail.com", "b"); //wrong password
 
-		ConnectionListenerServer con_listener = new ConnectionListenerServer(16500, server);
+		ConnectionListenerServer con_listener = new ConnectionListenerServer(60812, server);
 		con_listener.start();		
 	}
 }

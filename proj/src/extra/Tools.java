@@ -1,25 +1,15 @@
 package extra;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
-import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
-import java.security.Security;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
 import javax.swing.JFileChooser;
-
-import com.sun.net.ssl.internal.ssl.Provider;
 
 import main.Chunk;
 
@@ -80,7 +70,6 @@ public abstract class Tools {
 		}
 		return message;
 	}
-
 
 	/**
 	 * DELETE <Version> <FileId> <CRLF><CRLF>
@@ -290,10 +279,7 @@ public abstract class Tools {
 	 */
 	public static String getType(String msg) {
 		return msg.split(" +")[0];
-
 	}
-
-	
 
 	/**
 	 * #proj2 
@@ -311,8 +297,6 @@ public abstract class Tools {
 	            chooser.getSelectedFile().getName());
 	       return chooser.getSelectedFile().getPath();
 	    }
-	    return null;
-		
+	    return null;	
 	}
-
 }

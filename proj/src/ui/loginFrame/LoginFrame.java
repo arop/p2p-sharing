@@ -24,7 +24,6 @@ public class LoginFrame extends JFrame {
 	private boolean success = false;
 	private PeerNew mainThread;
 	private RegisterFrame registerForm;
-	
 
 	public LoginFrame(PeerNew peer) {
 		mainThread = peer;
@@ -32,10 +31,7 @@ public class LoginFrame extends JFrame {
 		setVisible(true);
 	}
 
-
-
 	private void initUI() {
-
 		setTitle("Login");
 		this.setMinimumSize(new Dimension(200,200));
 		//setSize(300, 200);
@@ -43,18 +39,17 @@ public class LoginFrame extends JFrame {
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		setResizable(false);
 
-		
 		JTextArea username = new JTextArea();
 		JPasswordField password = new JPasswordField();
-		
+
 		JLabel usernameLabel = new JLabel("username");
 		JLabel passwordLabel = new JLabel("password");
 
 		JButton loginButton = new JButton("Login");
-		
+
 		JButton registerButton = new JButton("No account? Join us now!");
 
-		
+
 		loginButton.addActionListener(new ActionListener()
 		{
 			@Override	
@@ -64,7 +59,7 @@ public class LoginFrame extends JFrame {
 				}
 			}
 		});
-		
+
 		registerButton.addActionListener(new ActionListener()
 		{
 			@Override	
@@ -73,15 +68,15 @@ public class LoginFrame extends JFrame {
 				registerForm.setVisible(true);
 			}
 		});
-	
-		
-	
+
+
+
 		JPanel loginForm = new JPanel();
-		
+
 		GridLayout grid = new GridLayout(6,1);
-		
+
 		loginForm.setLayout(grid);		
-		
+
 		loginForm.add(usernameLabel);
 		loginForm.add(username);
 		loginForm.add(passwordLabel);
@@ -89,12 +84,11 @@ public class LoginFrame extends JFrame {
 		loginForm.add(loginButton);
 		loginForm.add(registerButton);
 
-			
+
 		this.add(loginForm);
-		
+
 		this.pack();
 	}
-
 
 	public synchronized void setSuccess(boolean b){
 		success = b;
@@ -103,9 +97,6 @@ public class LoginFrame extends JFrame {
 	public synchronized boolean isSuccess() {
 		return success;
 	}
-
-
-
 
 	public static void main(String[] args) {
 
@@ -118,8 +109,4 @@ public class LoginFrame extends JFrame {
 			}
 		});
 	}
-
 }
-
-
-

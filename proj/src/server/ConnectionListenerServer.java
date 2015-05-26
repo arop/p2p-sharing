@@ -8,9 +8,7 @@ import java.io.PrintWriter;
 import java.lang.reflect.Type;
 import java.security.KeyStore;
 import java.security.PrivilegedActionException;
-import java.security.Security;
 import java.util.ArrayList;
-import java.util.Properties;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
@@ -18,16 +16,12 @@ import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
 
-
-
-import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManagerFactory;
 
 import user.User;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.sun.net.ssl.internal.ssl.Provider;
 
 import extra.Tools;
 
@@ -188,9 +182,10 @@ public class ConnectionListenerServer extends Thread{
 			System.out.println("Username: " + loginparts[0]);
 			System.out.println("Password: " + loginparts[1]);
 			
-			if( (user_id = mainThread.login(loginparts[0],loginparts[1])) > 0){
-				mainThread.updateUserAddress(user_id, sourceAddress);
-				return Tools.generateMessage("OK");
+			User user = null;
+			if( (user = mainThread.login(loginparts[0],loginparts[1])) != null){
+				mainThread.updateUserAddress(user.getId(), sourceAddress);
+				return Tools.generateJsonMessage("OK",gson.toJson(user));
 			}
 				
 			return Tools.generateMessage("NOTOK");
@@ -210,9 +205,6 @@ public class ConnectionListenerServer extends Thread{
 			if(mainThread.registerUser(registerParts[0],registerParts[1],registerParts[2],sourceAddress,temp))
 				return Tools.generateMessage("OK");
 			return Tools.generateMessage("NOTOK");
-
-
-
 
 		default:
 			break;				

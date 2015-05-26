@@ -7,7 +7,6 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.security.KeyStore;
 import java.security.PrivilegedActionException;
-import java.security.Security;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
@@ -16,11 +15,11 @@ import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.TrustManagerFactory;
 
-import com.sun.net.ssl.internal.ssl.Provider;
-
+import main.Chunk;
+import extra.FileManagement;
 import extra.Tools;
 
-public class ConnectionListenerPeer extends Thread{
+public class ConnectionListenerPeer extends Thread {
 	private PeerNew mainThread;
 
 	public ConnectionListenerPeer(PeerNew peer){
@@ -29,8 +28,6 @@ public class ConnectionListenerPeer extends Thread{
 
 	@Override
 	public void run() {
-		
-
 		SSLServerSocket sslServerSocket = null;
 		SSLSocket sslSocket = null ;
 
@@ -41,7 +38,7 @@ public class ConnectionListenerPeer extends Thread{
 					System.out.println("NUUULLOOOO");
 					System.exit(0);
 				}
-				
+
 				sslSocket = (SSLSocket)sslServerSocket.accept();
 
 				PrintWriter out = new PrintWriter(sslSocket.getOutputStream(), true); //vai responder por aqui
@@ -65,7 +62,6 @@ public class ConnectionListenerPeer extends Thread{
 				in.close();
 				sslSocket.close();
 				sslServerSocket.close();	
-
 			}
 			catch(Exception exp)
 			{
@@ -85,48 +81,52 @@ public class ConnectionListenerPeer extends Thread{
 		}
 	}
 
-	
 	private SSLServerSocket getServerSocket(int socket_port) {
-	    try {
-	    	
-	        /* Create keystore */
-	        KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-	        keyStore.load(new FileInputStream("..\\certificates\\server\\keystore"), "peerkey".toCharArray());
+		try {    	
+			/* Create keystore */
+			KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+			keyStore.load(new FileInputStream("..\\certificates\\server\\keystore"), "peerkey".toCharArray());
 
-	        
-	        KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-	    	kmf.init(keyStore, "peerkey".toCharArray()); // That's the key's password, if different.
-	   
-	        
-	        /* Get factory for the given keystore */
-	        TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-	        tmf.init(keyStore);
-	        
-	        SSLContext ctx = SSLContext.getInstance("SSL");
-	        //ctx.init(null, tmf.getTrustManagers(), null);
-	        ctx.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
-	        
-	        SSLServerSocketFactory factory = ctx.getServerSocketFactory();
+			KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+			kmf.init(keyStore, "peerkey".toCharArray()); // That's the key's password, if different.
 
-	        return (SSLServerSocket) factory.createServerSocket(socket_port);
-	    } catch (Exception e) {
-	       System.out.println("Problem creating SSL Server Socket: "+ e.getMessage()+"\n"+e.getCause());
-	       return null;
-	    }
-	    
+			/* Get factory for the given keystore */
+			TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+			tmf.init(keyStore);
+
+			SSLContext ctx = SSLContext.getInstance("SSL");
+			//ctx.init(null, tmf.getTrustManagers(), null);
+			ctx.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
+
+			SSLServerSocketFactory factory = ctx.getServerSocketFactory();
+
+			return (SSLServerSocket) factory.createServerSocket(socket_port);
+		} catch (Exception e) {
+			System.out.println("Problem creating SSL Server Socket: "+ e.getMessage()+"\n"+e.getCause());
+			return null;
+		}	    
 	}
-	
+
 	/**
 	 * parses received message, executes action, and generates response.
 	 * @param message
 	 * @return Response to received message. Null if not applicable.
+	 * @throws IOException 
 	 */
-	public String parseReceivedMessage(String message){
+	public String parseReceivedMessage(String message) throws IOException{
 		String[] messageHeadParts = Tools.getHead(message).split(" +");
 
 		switch(messageHeadParts[0]) {
 		case "ISONLINE":
 			return Tools.generateMessage("OK");
+
+		case "PUTCHUNK":
+			/* message = "PUTCHUNK " + Tools.getVersion() + " " + chunk.getFileId() +  " "  + chunk.getChunkNo() + " " + chunk.getReplicationDeg() 
+			+ "\r\n\r\n" + (new String(chunk.getByteArray(),StandardCharsets.ISO_8859_1));
+			 */
+			Chunk temp = new Chunk(Tools.getBody(message).getBytes());
+			FileManagement.materializeChunk(temp);
+			return Tools.generateMessage("STORED");
 
 		default:
 			break;				
