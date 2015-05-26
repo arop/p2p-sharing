@@ -35,33 +35,33 @@ public class ConnectionListenerPeer extends Thread {
 			try {
 				sslServerSocket = getServerSocket(this.mainThread.getLocalUser().getPort());
 				if (sslServerSocket == null){
-					System.out.println("NUUULLOOOO");
-					System.exit(0);
+					System.out.println("Failed to open socket! Port: " + mainThread.getLocalUser().getPort());
 				}
+				else {
+					sslSocket = (SSLSocket)sslServerSocket.accept();
 
-				sslSocket = (SSLSocket)sslServerSocket.accept();
+					PrintWriter out = new PrintWriter(sslSocket.getOutputStream(), true); //vai responder por aqui
+					BufferedReader in = new BufferedReader(new InputStreamReader(sslSocket.getInputStream())); //lê daqui
 
-				PrintWriter out = new PrintWriter(sslSocket.getOutputStream(), true); //vai responder por aqui
-				BufferedReader in = new BufferedReader(new InputStreamReader(sslSocket.getInputStream())); //lê daqui
+					String inputLine = in.readLine();
+					inputLine += in.readLine();
+					inputLine+= "\r\n\r\n";
+					inputLine += in.readLine();
 
-				String inputLine = in.readLine();
-				inputLine += in.readLine();
-				inputLine+= "\r\n\r\n";
-				inputLine += in.readLine();
-
-				System.out.println("message received: \n	"+inputLine);
-				String origin_ip = sslSocket.getInetAddress().getHostAddress();
-				//PROCESS RECEIVED MESSAGE
-				System.out.println("	from: "+origin_ip);
-				String responseMessage = this.parseReceivedMessage(inputLine);
-				//SEND RESPONSE
-				out.println(responseMessage);
-				System.out.println("Answer sent!");
-				// Close the streams and the socket
-				out.close();
-				in.close();
-				sslSocket.close();
-				sslServerSocket.close();	
+					System.out.println("message received: \n	"+inputLine);
+					String origin_ip = sslSocket.getInetAddress().getHostAddress();
+					//PROCESS RECEIVED MESSAGE
+					System.out.println("	from: "+origin_ip);
+					String responseMessage = this.parseReceivedMessage(inputLine);
+					//SEND RESPONSE
+					out.println(responseMessage);
+					System.out.println("Answer sent!");
+					// Close the streams and the socket
+					out.close();
+					in.close();
+					sslSocket.close();
+					sslServerSocket.close();	
+				}
 			}
 			catch(Exception exp)
 			{
@@ -126,7 +126,7 @@ public class ConnectionListenerPeer extends Thread {
 			 */
 			Chunk temp = new Chunk(Tools.getBody(message).getBytes());
 			FileManagement.materializeChunk(temp);
-			return Tools.generateMessage("STORED");
+			return Tools.generateMessage("STORED", temp);
 
 		default:
 			break;				

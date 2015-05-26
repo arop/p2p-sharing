@@ -46,12 +46,12 @@ public class PeerNew {
 	private int serverPort = 16500; 
 
 	private DegreeMonitorThread degMonitor;
-	
+
 	ArrayList<User> friends;
-	
+
 	private Map <String, String> backupList;
 	private Map <String, Integer> backupList2;
-	
+
 	private ArrayList<Chunk> chunklist;
 	private ArrayList<Chunk> chunksReceived;
 
@@ -59,12 +59,12 @@ public class PeerNew {
 		chunklist = new ArrayList<Chunk>();
 		backupList = new HashMap<String, String>();
 		backupList2 = new HashMap<String, Integer>();
-		
+
 		degMonitor = new DegreeMonitorThread();
 
 		loadChunkList();
 		loadBackupList();
-		
+
 		degMonitor.start();
 	}
 
@@ -133,8 +133,6 @@ public class PeerNew {
 		}
 		loginFrame.dispose();
 
-		User local = new User(1, "norim_13", "norim_13@hotmail.com",null,"localhost", 4444);
-		this.setLocalUser(local);
 		this.friends = new ArrayList<User>();//initialize list
 
 		this.getFriendsFromServer(); //update list with values from server
@@ -162,7 +160,13 @@ public class PeerNew {
 	public boolean login(String username, String password) {
 		String messagebody = username + " " + password;
 		String response = this.sendMessage(Tools.generateJsonMessage("LOGIN",messagebody), serverAddress, serverPort,0);
-		return Tools.getType(response).equals("OK");
+		if(!Tools.getType(response).equals("OK"))
+			return false;
+
+		Gson g = new Gson();
+		User u = g.fromJson(Tools.getBody(response), User.class);
+		setLocalUser(u);
+		return true;
 	}
 
 	public boolean register(String username, String email, String password1, String password2, int desiredPort) {
@@ -177,9 +181,9 @@ public class PeerNew {
 
 	public static void main(String[] args) throws InterruptedException, IOException{
 		generateFolders();
-		
+
 		PeerNew peer = new PeerNew();
-		
+
 		peer.startPeer();	
 	}
 
@@ -194,16 +198,18 @@ public class PeerNew {
 
 		//2 -> get online users IPs and ports from server
 		ArrayList<User> onlineUsers = this.getOnlineUsersFromServer();
+		
 		if (onlineUsers == null)
 			System.out.println("Null online users");
 		else {
 			for(User user : onlineUsers){
 				System.out.println("User: "+user.getIp()+":"+user.getPort());
 			}
+			onlineUsers.remove(localUser);
 		}
 
 		//3 -> send each chunk for repDegree random users
-		if(onlineUsers.size() < repDegree) {
+		if(onlineUsers.size()-1 < repDegree) {
 			System.err.println("ERROR: Impossible rep degree at this point");
 			return;
 		}
@@ -213,18 +219,21 @@ public class PeerNew {
 			usedIndexes.clear();
 			String msg = Tools.generateMessage("PUTCHUNK", chunk);
 
+			System.out.println("inside for");
+
 			int tempRepDegree = repDegree;
 			Random r = new Random();
 
 			while(tempRepDegree > 0) {
 				int index = r.nextInt(onlineUsers.size());
+				
 				while(usedIndexes.contains(index))
 					index = r.nextInt(onlineUsers.size());
 
 				usedIndexes.add(index);
 
 				User temp = onlineUsers.get(index);
-
+				System.out.println("sending message");
 				this.sendMessage(msg, temp.getIp(), temp.getPort(), 0);
 				tempRepDegree--;
 			}
@@ -323,7 +332,7 @@ public class PeerNew {
 			return null;
 		}
 	}
-	
+
 	/**
 	 * Create folders
 	 * @throws InterruptedException 
@@ -333,7 +342,7 @@ public class PeerNew {
 		File dir1 = new File("files");
 		if(!dir1.exists())
 			dir1.mkdir();
-			
+
 		File dir2 = new File("files\\lists");
 		if(!dir2.exists())
 			dir2.mkdir();
@@ -346,7 +355,7 @@ public class PeerNew {
 		if(!dir4.exists())
 			dir4.mkdir();
 	}
-	
+
 	public void addToBackupList(String string, String fId,int numberOfChunks) {
 		if(!isBackedUp(string)) {
 			backupList.put(string, fId);
@@ -482,7 +491,7 @@ public class PeerNew {
 		chunklist.clear();
 		loadChunkList();
 	}
-	
+
 	/**
 	 * Checks if peer has chunk
 	 * @param fileId 
@@ -511,7 +520,7 @@ public class PeerNew {
 		}
 		return toSend;
 	}
-	
+
 	/**
 	 * Checks if it has already received that chunk (used when restoring a file)
 	 * @param fileId
@@ -525,7 +534,7 @@ public class PeerNew {
 		}
 		return false;
 	}
-	
+
 	public String getFilename(String fileId) {
 		for(Map.Entry<String, String> filenames: backupList.entrySet()) {
 			if(filenames.getValue().equals(fileId)) {
@@ -541,7 +550,7 @@ public class PeerNew {
 	public Boolean isBackedUp(String filename) {
 		return this.backupList.containsKey(filename);
 	}
-	
+
 	public Map<String, String> getBackupList() {
 		return backupList;
 	}

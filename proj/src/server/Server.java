@@ -116,7 +116,8 @@ public class Server {
 	 */
 	public String sendMessage(String msg, String ip_dest, int port_dest, int connection_try_number){
 		System.out.println("server vai tentar enviar pela funcao sendMessage");
-
+		System.out.println(msg);
+		
 		int timeout = 3000; //timeout in miliseconds
 
 		SSLSocket sslSocket;
@@ -157,7 +158,7 @@ public class Server {
 			return this.sendMessage(msg, ip_dest, port_dest,connection_try_number+1);
 		}
 		
-		System.out.println("Enviou msg. Repsonse: "+response);
+		System.out.println("Enviou msg. Response: "+response);
 		return response;
 	}
 	
@@ -178,8 +179,7 @@ public class Server {
 	    } catch (Exception e) {
 	    	System.out.println("Problem starting auth server: "+ e.getMessage()+"\n"+e.getCause());
 	    	return null;
-	    }
-		
+	    }	
 	}
 	
 	public static void main(String[] args){
@@ -194,7 +194,7 @@ public class Server {
 
 		server.login("norim_13@hotmail.com", "b"); //wrong password
 
-		ConnectionListenerServer con_listener = new ConnectionListenerServer(60812, server);
+		ConnectionListenerServer con_listener = new ConnectionListenerServer(16500, server);
 		con_listener.start();		
 	}
 }

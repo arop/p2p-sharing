@@ -131,15 +131,6 @@ public abstract class Tools {
 	 * @return
 	 */
 	public static String generateJsonMessage(String type, String json_body){
-		/*String message = null;
-		switch(type) {
-		case "USERS":
-			message = "USERS " + Tools.getVersion() + "\r\n\r\n" + json_body ;
-			break;
-		default:
-			System.err.println("Invalid Message!");
-			break;
-		}*/
 		String message = type + " " + Tools.getVersion() + "\r\n\r\n" + json_body ;
 		return message;
 	}
