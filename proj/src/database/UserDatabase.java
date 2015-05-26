@@ -56,13 +56,15 @@ public class UserDatabase {
 			int id = rs.getInt("id");
 			String  username = rs.getString("username");
 			String  email = rs.getString("email");
+			String  ip = rs.getString("last_ip");
+			int port = rs.getInt("port");	
 			
 			if (!complete)
-				return new User(id, username, email, null, null, -1);
+				return new User(id, username, email, null, ip, port);
 			
-			String  ip = rs.getString("last_ip");
+			
 			String  password_hash = rs.getString("password_hash");
-			int port = rs.getInt("port");	
+			
 			return new User(id, username, email, password_hash, ip, port);
 		} catch (SQLException e) {
 			System.err.println( e.getClass().getName() + ": " + e.getMessage() );
@@ -137,7 +139,8 @@ public class UserDatabase {
 	      stmt.close();
 	    } catch ( Exception e ) {
 	      System.err.println( e.getClass().getName() + ": " + e.getMessage() );
-	      System.exit(0);
+	      //System.exit(0);
+	      return;
 	    }
 	}
 	
@@ -164,14 +167,20 @@ public class UserDatabase {
 		return result;
 	}
 	
-	public String login(String email, String password){
+	/**
+	 * 
+	 * @param email
+	 * @param password
+	 * @return user id, or -1 if any error occurs
+	 */
+	public int login(String email, String password){
 		
 		User user = getUserByEmail(email);
 		if (user == null)
-			return "Email doesn't exist!";
+			return -1;
 		if (BCrypt.checkpw(password, user.getPasswordHash()))
-			return "success";
-		return "Wrong password...";
+			return user.getId();
+		return -1;
 	}
 
 	/**

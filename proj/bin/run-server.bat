@@ -1,1 +1,1 @@
-java -classpath ".;..\jars\sqlite-jdbc-3.8.10.1.jar;..\jars\gson-2.3.1.jar"   server.Server
+java -classpath ".;..\jars\sqlite-jdbc-3.8.10.1.jar;..\jars\gson-2.3.1.jar;..\jars\jce_policy-8.zip" -Djavax.net.ssl.trustStore=..\certificates\server\truststore -Djavax.net.ssl.trustStorePassword=serverkeytrust  server.Server

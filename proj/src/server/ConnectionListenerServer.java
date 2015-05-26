@@ -1,21 +1,27 @@
 package server;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.lang.reflect.Type;
+import java.security.KeyStore;
 import java.security.PrivilegedActionException;
 import java.security.Security;
 import java.util.ArrayList;
+import java.util.Properties;
 
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
 
 
 
-
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManagerFactory;
 
 import user.User;
 
@@ -36,28 +42,22 @@ public class ConnectionListenerServer extends Thread{
 
 	@Override
 	public void run() {
-		{
-			// Registering the JSSE provider
-			Security.addProvider(new Provider());
-
-			//Specifying the Keystore details
-			System.setProperty("javax.net.ssl.keyStore","..\\certificates\\server\\keystore");
-			System.setProperty("javax.net.ssl.keyStorePassword","peerkey");
-
-			// Enable debugging to view the handshake and communication which happens between the SSLClient and the SSLServer
-			// System.setProperty("javax.net.debug","all");
-		}
 
 		SSLServerSocket sslServerSocket = null;
 		SSLSocket sslSocket = null ;
 
 		while(true){
 			try {
-				// Initialize the Server Socket
-				SSLServerSocketFactory sslServerSocketfactory = (SSLServerSocketFactory)SSLServerSocketFactory.getDefault();
-				sslServerSocket = (SSLServerSocket)sslServerSocketfactory.createServerSocket(this.port);
+				
+				sslServerSocket = getServerSocket(this.port);
+				if (sslServerSocket == null){
+					System.out.println("NUUULLOOOO");
+					System.exit(0);
+				}
+				
 				sslSocket = (SSLSocket)sslServerSocket.accept();
-
+				
+				
 				// Create Input / Output Streams for communication with the client
 				PrintWriter out = new PrintWriter(sslSocket.getOutputStream(), true); //vai responder por aqui
 				BufferedReader in = new BufferedReader(new InputStreamReader(sslSocket.getInputStream())); //lê daqui
@@ -80,13 +80,14 @@ public class ConnectionListenerServer extends Thread{
 				//PROCESS RECEIVED MESSAGE
 				System.out.println("	from: "+origin_ip);
 				String responseMessage = this.parseReceivedMessage(inputLine, origin_ip);
+				
 				//SEND RESPONSE
 				out.println(responseMessage);
 				System.out.println("Answer sent!");
 				// Close the streams and the socket
 				out.close();
 				in.close();
-				sslSocket.close();
+				//sslSocket.close();
 				sslServerSocket.close();	
 
 			}
@@ -95,10 +96,10 @@ public class ConnectionListenerServer extends Thread{
 				PrivilegedActionException priexp = new PrivilegedActionException(exp);
 				System.out.println(" Priv exp --- " + priexp.getMessage());
 				System.out.println(" Exception occurred .... " +exp);
-				//exp.printStackTrace();
+				exp.printStackTrace();
 
 				try {
-					sslSocket.close();
+					//sslSocket.close();
 					sslServerSocket.close();
 				} catch (IOException e) {
 					System.out.println("erro no while read server");
@@ -106,6 +107,37 @@ public class ConnectionListenerServer extends Thread{
 			}
 		}
 	}
+	
+	private SSLServerSocket getServerSocket(int socket_port) {
+	    try {
+	    	
+	        /* Create keystore */
+	        KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+	        keyStore.load(new FileInputStream("..\\certificates\\server\\keystore"), "peerkey".toCharArray());
+
+	        
+	        KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+	    	kmf.init(keyStore, "peerkey".toCharArray()); // That's the key's password, if different.
+	        
+	        
+	        /* Get factory for the given keystore */
+	        TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+	        tmf.init(keyStore);
+	        
+	        SSLContext ctx = SSLContext.getInstance("SSL");
+	        //ctx.init(null, tmf.getTrustManagers(), null);
+	        ctx.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
+	        
+	        SSLServerSocketFactory factory = ctx.getServerSocketFactory();
+
+	        return (SSLServerSocket) factory.createServerSocket(socket_port);
+	    } catch (Exception e) {
+	       System.out.println("Problem creating SSL Server Socket: "+ e.getMessage()+"\n"+e.getCause());
+	       return null;
+	    }
+	    
+	}
+	
 
 	/**
 	 * parses received message, executes action, and generates response.
@@ -117,7 +149,8 @@ public class ConnectionListenerServer extends Thread{
 		String[] messageHeadParts = Tools.getHead(message).split(" +");
 		int user_id;
 		Gson gson = new Gson();;
-
+		Type arrayListOfUsers = new TypeToken<ArrayList<User>>(){}.getType();
+		
 		switch(messageHeadParts[0]) {
 		case "GETALLUSERS":
 			//GETALLUSERS <Version> <CRLF><CRLF>
@@ -140,27 +173,29 @@ public class ConnectionListenerServer extends Thread{
 
 			ArrayList<User> userList = this.mainThread.getFriendsOfUser(user_id);
 
-			Type arrayListOfUsers = new TypeToken<ArrayList<User>>(){}.getType();
 			String json_data = gson.toJson(userList, arrayListOfUsers);
 
 			return Tools.generateJsonMessage("FRIENDS", json_data);
-
-		case "AMONLINE":
-			//AMONLINE <Version> <User id> <CRLF><CRLF>
-			user_id = Integer.parseInt(messageHeadParts[2]);
-			mainThread.addOnlineUser(user_id);
+		
+		case "GETONLINEUSERS": 
+			//ADDFRIENDS <Version> <User id> <CRLF><CRLF> JSON of int[] users ids
+			ArrayList<User> userList1 = this.mainThread.getOnlineUsers();
+			return Tools.generateJsonMessage("ONLINEUSERS", gson.toJson(userList1, arrayListOfUsers));
 
 		case "LOGIN":
 			String[] loginparts = Tools.getBody(message).split(" ");
-
+			
 			System.out.println("Username: " + loginparts[0]);
 			System.out.println("Password: " + loginparts[1]);
-
-			if(mainThread.login(loginparts[0],loginparts[1]))
+			
+			if( (user_id = mainThread.login(loginparts[0],loginparts[1])) > 0){
+				mainThread.updateUserAddress(user_id, sourceAddress);
 				return Tools.generateMessage("OK");
+			}
+				
 			return Tools.generateMessage("NOTOK");
-
-
+		
+			
 		case "REGISTER":
 			String[] registerParts = Tools.getBody(message).split(" ");
 

@@ -1,2 +1,4 @@
-keystore contains privete key of peer2server
+keystore contains private key of peer2server
 password: peerkey
+
+truststore copiada do peer

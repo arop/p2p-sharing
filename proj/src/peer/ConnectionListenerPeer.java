@@ -1,15 +1,20 @@
 package peer;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.security.KeyStore;
 import java.security.PrivilegedActionException;
 import java.security.Security;
 
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
+import javax.net.ssl.TrustManagerFactory;
 
 import com.sun.net.ssl.internal.ssl.Provider;
 
@@ -24,27 +29,19 @@ public class ConnectionListenerPeer extends Thread{
 
 	@Override
 	public void run() {
-		{
-			// Registering the JSSE provider
-			Security.addProvider(new Provider());
-
-			//Specifying the Keystore details
-			System.setProperty("javax.net.ssl.keyStore","..\\certificates\\peer\\keystore");
-			System.setProperty("javax.net.ssl.keyStorePassword","serverkey");
-
-			// Enable debugging to view the handshake and communication which happens between the SSLClient and the SSLServer
-			// System.setProperty("javax.net.debug","all");
-		}
+		
 
 		SSLServerSocket sslServerSocket = null;
 		SSLSocket sslSocket = null ;
 
 		while(true){
 			try {
-
-				// Initialize the Server Socket
-				SSLServerSocketFactory sslServerSocketfactory = (SSLServerSocketFactory)SSLServerSocketFactory.getDefault();
-				sslServerSocket = (SSLServerSocket)sslServerSocketfactory.createServerSocket(this.mainThread.getLocalUser().getPort());
+				sslServerSocket = getServerSocket(this.mainThread.getLocalUser().getPort());
+				if (sslServerSocket == null){
+					System.out.println("NUUULLOOOO");
+					System.exit(0);
+				}
+				
 				sslSocket = (SSLSocket)sslServerSocket.accept();
 
 				PrintWriter out = new PrintWriter(sslSocket.getOutputStream(), true); //vai responder por aqui
@@ -88,6 +85,37 @@ public class ConnectionListenerPeer extends Thread{
 		}
 	}
 
+	
+	private SSLServerSocket getServerSocket(int socket_port) {
+	    try {
+	    	
+	        /* Create keystore */
+	        KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+	        keyStore.load(new FileInputStream("..\\certificates\\server\\keystore"), "peerkey".toCharArray());
+
+	        
+	        KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+	    	kmf.init(keyStore, "peerkey".toCharArray()); // That's the key's password, if different.
+	   
+	        
+	        /* Get factory for the given keystore */
+	        TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+	        tmf.init(keyStore);
+	        
+	        SSLContext ctx = SSLContext.getInstance("SSL");
+	        //ctx.init(null, tmf.getTrustManagers(), null);
+	        ctx.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
+	        
+	        SSLServerSocketFactory factory = ctx.getServerSocketFactory();
+
+	        return (SSLServerSocket) factory.createServerSocket(socket_port);
+	    } catch (Exception e) {
+	       System.out.println("Problem creating SSL Server Socket: "+ e.getMessage()+"\n"+e.getCause());
+	       return null;
+	    }
+	    
+	}
+	
 	/**
 	 * parses received message, executes action, and generates response.
 	 * @param message
@@ -95,8 +123,6 @@ public class ConnectionListenerPeer extends Thread{
 	 */
 	public String parseReceivedMessage(String message){
 		String[] messageHeadParts = Tools.getHead(message).split(" +");
-		//int user_id;
-		//Gson gson = new Gson();;
 
 		switch(messageHeadParts[0]) {
 		case "ISONLINE":

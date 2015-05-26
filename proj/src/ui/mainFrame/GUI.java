@@ -81,7 +81,7 @@ public class GUI extends JFrame {
 				String filePath;
 				if( (filePath = Tools.selectFileFrame()) != null){
 					System.out.println("This file was selected: "+filePath);
-					mainThread.startRegularBackupProtocol(filePath);
+					mainThread.startRegularBackupProtocol(filePath, 1); //TODO replication degree hardcoded
 				}
 			}
 		});
