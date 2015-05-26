@@ -115,8 +115,7 @@ public class Server {
 	 * @return response from other peer/server
 	 */
 	public String sendMessage(String msg, String ip_dest, int port_dest, int connection_try_number){
-		System.out.println("server vai tentar enviar pela funcao sendMessage");
-		System.out.println(msg);
+		System.out.println("Sending message: "+Tools.getType(msg));
 		
 		int timeout = 3000; //timeout in miliseconds
 
@@ -158,7 +157,7 @@ public class Server {
 			return this.sendMessage(msg, ip_dest, port_dest,connection_try_number+1);
 		}
 		
-		System.out.println("Enviou msg. Response: "+response);
+		System.out.println("	answer: "+Tools.getHead(response));
 		return response;
 	}
 	

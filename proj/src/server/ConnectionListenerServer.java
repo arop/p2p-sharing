@@ -45,44 +45,38 @@ public class ConnectionListenerServer extends Thread{
 				
 				sslServerSocket = getServerSocket(this.port);
 				if (sslServerSocket == null){
-					System.out.println("NUUULLOOOO");
-					System.exit(0);
+					System.out.println("Failed to create socket. Port: "+this.port);
+					//System.exit(0);
+				}
+				else{
+					sslSocket = (SSLSocket)sslServerSocket.accept();
+					
+					
+					// Create Input / Output Streams for communication with the client
+					PrintWriter out = new PrintWriter(sslSocket.getOutputStream(), true); //vai responder por aqui
+					BufferedReader in = new BufferedReader(new InputStreamReader(sslSocket.getInputStream())); //lê daqui
+
+					String inputLine = in.readLine();
+					inputLine += in.readLine();
+					inputLine+= "\r\n\r\n";
+					inputLine += in.readLine();
+
+					System.out.println("message received: "+Tools.getHead(inputLine));
+					String origin_ip = sslSocket.getInetAddress().getHostAddress();
+					//PROCESS RECEIVED MESSAGE
+					System.out.println("	from: "+origin_ip);
+					String responseMessage = this.parseReceivedMessage(inputLine, origin_ip);
+					
+					//SEND RESPONSE
+					out.println(responseMessage);
+					//System.out.println("Answer sent!");
+					// Close the streams and the socket
+					out.close();
+					in.close();
+					//sslSocket.close();
+					sslServerSocket.close();	
 				}
 				
-				sslSocket = (SSLSocket)sslServerSocket.accept();
-				
-				
-				// Create Input / Output Streams for communication with the client
-				PrintWriter out = new PrintWriter(sslSocket.getOutputStream(), true); //vai responder por aqui
-				BufferedReader in = new BufferedReader(new InputStreamReader(sslSocket.getInputStream())); //lê daqui
-
-				/*String inputLine;
-		         String message = "";
-		        while ((inputLine = in.readLine()) != null) {
-		            message += inputLine; 
-		        	out.println(inputLine);
-		            System.out.println("message received: \n	"+inputLine);
-		        }*/
-
-				String inputLine = in.readLine();
-				inputLine += in.readLine();
-				inputLine+= "\r\n\r\n";
-				inputLine += in.readLine();
-
-				System.out.println("message received: \n	"+inputLine);
-				String origin_ip = sslSocket.getInetAddress().getHostAddress();
-				//PROCESS RECEIVED MESSAGE
-				System.out.println("	from: "+origin_ip);
-				String responseMessage = this.parseReceivedMessage(inputLine, origin_ip);
-				
-				//SEND RESPONSE
-				out.println(responseMessage);
-				System.out.println("Answer sent!");
-				// Close the streams and the socket
-				out.close();
-				in.close();
-				//sslSocket.close();
-				sslServerSocket.close();	
 
 			}
 			catch(Exception exp)
