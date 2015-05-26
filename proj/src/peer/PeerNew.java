@@ -247,7 +247,7 @@ public class PeerNew {
 	 * @return response from other peer/server
 	 */
 	public String sendMessage(String msg, String ip_dest, int port_dest, int connection_try_number){
-		System.out.println("Sending message: "+Tools.getType(msg));
+		System.out.println("Sending message: "+Tools.getHead(msg));
 		{
 			// Registering the JSSE provider
 			Security.addProvider(new Provider());

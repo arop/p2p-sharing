@@ -122,9 +122,9 @@ public class ConnectionListenerPeer extends Thread {
 
 		case "PUTCHUNK":
 			Chunk temp = new Chunk(Tools.getBody(message).getBytes());
-			FileManagement.materializeChunk(temp);
-
+			
 			splitMessage(temp,Tools.getHead(message));
+			FileManagement.materializeChunk(temp);		
 			
 			return Tools.generateMessage("STORED", temp);
 
