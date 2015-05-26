@@ -121,16 +121,23 @@ public class ConnectionListenerPeer extends Thread {
 			return Tools.generateMessage("OK");
 
 		case "PUTCHUNK":
-			/* message = "PUTCHUNK " + Tools.getVersion() + " " + chunk.getFileId() +  " "  + chunk.getChunkNo() + " " + chunk.getReplicationDeg() 
-			+ "\r\n\r\n" + (new String(chunk.getByteArray(),StandardCharsets.ISO_8859_1));
-			 */
 			Chunk temp = new Chunk(Tools.getBody(message).getBytes());
 			FileManagement.materializeChunk(temp);
+
+			splitMessage(temp,Tools.getHead(message));
+			
 			return Tools.generateMessage("STORED", temp);
 
 		default:
 			break;				
 		}
 		return null;
-	}	
+	}
+	
+	void splitMessage(Chunk chunk, String message) {
+		String[] temp = message.split(" +");
+		chunk.setFileId(temp[2]);
+		chunk.setChunkNo(Integer.parseInt(temp[3].trim()));
+		chunk.setReplicationDeg(Integer.parseInt(temp[4].trim()));
+	}
 }
