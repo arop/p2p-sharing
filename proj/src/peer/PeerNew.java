@@ -247,13 +247,13 @@ public class PeerNew {
 	 * @return response from other peer/server
 	 */
 	public String sendMessage(String msg, String ip_dest, int port_dest, int connection_try_number){
-		System.out.println("VAI TENTAR ENVIAR: "+Tools.getType(msg));
+		System.out.println("Sending message: "+Tools.getType(msg));
 		{
 			// Registering the JSSE provider
 			Security.addProvider(new Provider());
 		}
 
-		int timeout = 10000; //timeout in miliseconds
+		int timeout = 60000; //timeout in miliseconds
 
 		//SSLSocketFactory sslsocketfactory = (SSLSocketFactory)SSLSocketFactory.getDefault();
 		SSLSocket sslSocket;
@@ -288,8 +288,7 @@ public class PeerNew {
 			in.close();
 			sslSocket.close();		
 		} 
-		catch (SocketTimeoutException e){
-			System.out.println("timeout");
+		catch (Exception e) {
 			if (connection_try_number > 3){
 				//e.printStackTrace();
 				return null;
@@ -297,19 +296,7 @@ public class PeerNew {
 			System.out.println("try: "+connection_try_number);
 			return this.sendMessage(msg, ip_dest, port_dest,connection_try_number+1);
 		}
-		catch (ConnectException e){
-			if (connection_try_number > 3){
-				//e.printStackTrace();
-				return null;
-			}
-			System.out.println("try: "+connection_try_number);
-			return this.sendMessage(msg, ip_dest, port_dest,connection_try_number+1);
-		}
-		catch (IOException e) {
-			e.printStackTrace();
-			return null;
-		}
-		System.out.println("ENVIOU MENSAGEM E RECEBEU RESPOSTA: "+response);
+		System.out.println("	answer: "+Tools.getHead(response));
 		return response;
 	}
 
