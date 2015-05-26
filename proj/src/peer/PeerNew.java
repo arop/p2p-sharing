@@ -1,7 +1,12 @@
 package peer;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -9,14 +14,20 @@ import java.lang.reflect.Type;
 import java.net.ConnectException;
 import java.net.SocketTimeoutException;
 import java.security.KeyStore;
+import java.security.NoSuchAlgorithmException;
 import java.security.Security;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManagerFactory;
 
+import main.Chunk;
 import ui.loginFrame.LoginFrame;
 import ui.mainFrame.GUI;
 import user.User;
@@ -25,6 +36,8 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.sun.net.ssl.internal.ssl.Provider;
 
+import extra.DegreeMonitorThread;
+import extra.FileManagement;
 import extra.Tools;
 
 public class PeerNew {
@@ -32,12 +45,31 @@ public class PeerNew {
 	private String serverAddress = "localhost";
 	private int serverPort = 16500; 
 
+	private DegreeMonitorThread degMonitor;
+	
 	ArrayList<User> friends;
+	
+	private Map <String, String> backupList;
+	private Map <String, Integer> backupList2;
+	
+	private ArrayList<Chunk> chunklist;
+	private ArrayList<Chunk> chunksReceived;
 
-	public PeerNew() {}
+	public PeerNew() throws IOException {		
+		chunklist = new ArrayList<Chunk>();
+		backupList = new HashMap<String, String>();
+		backupList2 = new HashMap<String, Integer>();
+		
+		degMonitor = new DegreeMonitorThread();
+
+		loadChunkList();
+		loadBackupList();
+		
+		degMonitor.start();
+	}
 
 	private LoginFrame loginFrame;
-	private GUI mainFrame;
+	//private GUI mainFrame;
 
 	public ArrayList<User> getAllUsersFromServer(){
 		String response = this.sendMessage(Tools.generateMessage("GETALLUSERS"), serverAddress, serverPort,0);
@@ -62,9 +94,8 @@ public class PeerNew {
 		String list_json = Tools.getBody(response);
 		Type listOfUsersType = new TypeToken<ArrayList<User>>(){}.getType();
 		this.friends = gson.fromJson(list_json, listOfUsersType);
-
 	}
-	
+
 	public ArrayList<User> getOnlineUsersFromServer(){
 		String response = this.sendMessage(Tools.generateMessage("GETONLINEUSERS"), serverAddress, serverPort,0);
 		Gson gson = new Gson();
@@ -76,7 +107,6 @@ public class PeerNew {
 		String list_json = Tools.getBody(response);
 		Type listOfUsersType = new TypeToken<ArrayList<User>>(){}.getType();
 		return gson.fromJson(list_json, listOfUsersType);
-
 	}
 
 	/**
@@ -141,36 +171,67 @@ public class PeerNew {
 			String response = this.sendMessage(Tools.generateJsonMessage("REGISTER",messagebody), serverAddress, serverPort,0);
 			return Tools.getType(response).equals("OK");
 		}
-		
-		
+
 		return false;
 	}
-	
 
-	public static void main(String[] args){
+	public static void main(String[] args) throws InterruptedException, IOException{
+		generateFolders();
+		
 		PeerNew peer = new PeerNew();
-		peer.startPeer();
+		
+		peer.startPeer();	
 	}
 
 	public void startRegularBackupProtocol(String filePath, int repDegree) {
-		//1 -> get online users IPs and ports from server
+		//1-> split file into chunks
+		ArrayList<Chunk> chunks = null; 
+		try {
+			chunks = FileManagement.splitFile(filePath, repDegree);
+		} catch (FileNotFoundException | NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		}
+
+		//2 -> get online users IPs and ports from server
 		ArrayList<User> onlineUsers = this.getOnlineUsersFromServer();
 		if (onlineUsers == null)
 			System.out.println("Null online users");
-		else{
+		else {
 			for(User user : onlineUsers){
 				System.out.println("User: "+user.getIp()+":"+user.getPort());
 			}
 		}
-		
-		//2 -> send each chunk for repDegree random users
-		
-		
-		
+
+		//3 -> send each chunk for repDegree random users
+		if(onlineUsers.size() < repDegree) {
+			System.err.println("ERROR: Impossible rep degree at this point");
+			return;
+		}
+
+		ArrayList<Integer> usedIndexes = new ArrayList<Integer>();
+		for (Chunk chunk : chunks) {
+			usedIndexes.clear();
+			String msg = Tools.generateMessage("PUTCHUNK", chunk);
+
+			int tempRepDegree = repDegree;
+			Random r = new Random();
+
+			while(tempRepDegree > 0) {
+				int index = r.nextInt(onlineUsers.size());
+				while(usedIndexes.contains(index))
+					index = r.nextInt(onlineUsers.size());
+
+				usedIndexes.add(index);
+
+				User temp = onlineUsers.get(index);
+
+				this.sendMessage(msg, temp.getIp(), temp.getPort(), 0);
+				tempRepDegree--;
+			}
+		}	
 	}
-	
+
 	/**
-	 * 
 	 * @param msg
 	 * @param ip_dest
 	 * @param port_dest
@@ -185,7 +246,7 @@ public class PeerNew {
 
 		int timeout = 10000; //timeout in miliseconds
 
-		SSLSocketFactory sslsocketfactory = (SSLSocketFactory)SSLSocketFactory.getDefault();
+		//SSLSocketFactory sslsocketfactory = (SSLSocketFactory)SSLSocketFactory.getDefault();
 		SSLSocket sslSocket;
 
 		PrintWriter out = null;
@@ -242,28 +303,250 @@ public class PeerNew {
 		System.out.println("ENVIOU MENSAGEM E RECEBEU RESPOSTA: "+response);
 		return response;
 	}
-	
-	
+
 	private SSLSocket getSocketConnection(String host, int port) {
-	    try {
+		try {
+			/* Create keystore */
+			KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+			keyStore.load(new FileInputStream("..\\certificates\\server\\keystore"), "peerkey".toCharArray());
 
-	        
-	        /* Create keystore */
-	        KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-	        keyStore.load(new FileInputStream("..\\certificates\\server\\keystore"), "peerkey".toCharArray());
+			/* Get factory for the given keystore */
+			TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+			tmf.init(keyStore);
+			SSLContext ctx = SSLContext.getInstance("SSL");
+			ctx.init(null, tmf.getTrustManagers(), null);
+			SSLSocketFactory factory = ctx.getSocketFactory();
 
-	        /* Get factory for the given keystore */
-	        TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-	        tmf.init(keyStore);
-	        SSLContext ctx = SSLContext.getInstance("SSL");
-	        ctx.init(null, tmf.getTrustManagers(), null);
-	        SSLSocketFactory factory = ctx.getSocketFactory();
+			return (SSLSocket) factory.createSocket(host, port);
+		} catch (Exception e) {
+			System.out.println("Problem starting auth server: "+ e.getMessage()+"\n"+e.getCause());
+			return null;
+		}
+	}
+	
+	/**
+	 * Create folders
+	 * @throws InterruptedException 
+	 */
+	private static void generateFolders() throws InterruptedException {
 
-	        return (SSLSocket) factory.createSocket(host, port);
-	    } catch (Exception e) {
-	    	System.out.println("Problem starting auth server: "+ e.getMessage()+"\n"+e.getCause());
-	    	return null;
-	    }
-		
+		File dir1 = new File("files");
+		if(!dir1.exists())
+			dir1.mkdir();
+			
+		File dir2 = new File("files\\lists");
+		if(!dir2.exists())
+			dir2.mkdir();
+
+		File dir3 = new File("files\\restores");
+		if(!dir3.exists())
+			dir3.mkdir();
+
+		File dir4 = new File("files\\backups");
+		if(!dir4.exists())
+			dir4.mkdir();
+	}
+	
+	public void addToBackupList(String string, String fId,int numberOfChunks) {
+		if(!isBackedUp(string)) {
+			backupList.put(string, fId);
+			backupList2.put(string, numberOfChunks);
+		}
+	}
+
+	public void refreshBackupList() throws IOException {
+		if(backupList.isEmpty()) {
+			PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter("files\\lists\\backup_list.txt")));
+			out.close();
+		}
+		else for (Map.Entry<String, String> entry : backupList.entrySet()) {
+			FileManagement.addToBackupListFile(entry.getKey(), entry.getValue(), backupList2.get(entry.getKey()));
+		}
+	}
+
+	/**
+	 * Load list of backed up files
+	 * @throws IOException
+	 */
+	public void loadBackupList() throws IOException {
+		if(!FileManagement.fileExists("files\\lists\\backup_list.txt"))
+			(new File("files\\lists\\backup_list.txt")).createNewFile();
+		else {
+			try(BufferedReader br = new BufferedReader(new FileReader(new File("files\\lists\\backup_list.txt")))) {
+				for(String line; (line = br.readLine()) != null; ) {
+					String[] piecesOfLine = line.split(" +");
+					backupList.put(piecesOfLine[0],piecesOfLine[1]);
+					backupList2.put(piecesOfLine[0],Integer.parseInt(piecesOfLine[2]));
+				}
+				br.close();
+			}
+		}
+	}
+
+	/**
+	 * Checks the existence of chunks in folder, and saves it in the array
+	 * @throws IOException 
+	 * 
+	 */
+	public void loadChunkList() throws IOException {
+		File folder = new File("files\\backups");
+		if(!folder.exists()) {
+			folder.mkdir();
+		}
+
+		if(!folder.isDirectory()) {
+			throw new FileNotFoundException();
+		}
+
+		ArrayList<File> files = parseFiles(new ArrayList<File>(Arrays.asList(folder.listFiles())));
+
+		for (File file : files) {
+			String fName = file.getName();
+			String[] chunkName = fName.split("_");
+			String fileId = chunkName[0];
+			int chunkNo = Integer.parseInt(chunkName[2]);
+			chunklist.add(FileManagement.readChunk(fileId, chunkNo));
+		}
+	}
+
+	/**
+	 * Select only the files that are chunks
+	 * @param files
+	 * @return
+	 */
+	private ArrayList<File> parseFiles(ArrayList<File> files) {
+		ArrayList<File> toReturn = new ArrayList<File>();
+
+		for (File file : files) {
+			if(file.getName().contains("_chunk_"))
+				toReturn.add(file);
+		}
+		return toReturn;
+	}
+
+	/**
+	 * Deletes all chunk files with that fileId
+	 * @param fileId
+	 * @throws IOException
+	 */
+	public void deleteChunksOfFile(String fileId) throws IOException {
+		for (Chunk chunk : chunklist) {
+			if(chunk.getFileId().equals(fileId)) {
+				String filename = fileId + "_chunk_" + chunk.getChunkNo();
+
+				File f = new File("files\\backups\\"+filename);
+				System.gc();
+				f.delete();
+			}
+		}
+
+		/* reloads chunk list */
+		chunklist.clear();
+		loadChunkList();
+	}
+
+	/**
+	 * Deletes file from lists
+	 * @param fileId
+	 */
+	public void deleteFromSentLists(String fileId) {
+		String filename = getFilename(fileId);
+		backupList.remove(filename);
+		backupList2.remove(filename);
+
+		degMonitor.removeFromSentMap(fileId);
+	}
+
+	/**
+	 * Deletes Chunk with maximum replication degree ratio
+	 * @throws IOException
+	 */
+	public void deleteWorstChunk() throws IOException {
+		Chunk chunk = degMonitor.mostRedundant();
+
+		if(chunk != null) {
+			String filename = chunk.getFileId() + "_chunk_" + chunk.getChunkNo();
+
+			File f = new File("files\\backups\\"+filename);
+			System.gc();
+			f.delete(); 
+
+			degMonitor.removeFromStoredMap(chunk);
+
+			//this.sendMessage(Tools.generateMessage("REMOVED", chunk),MC_IP,MC_Port);
+		}
+
+		FileManagement.saveMapToFile(degMonitor.getStoredMap(),"files\\lists\\degreeListStored.txt");
+
+		/* reloads chunk list */
+		chunklist.clear();
+		loadChunkList();
+	}
+	
+	/**
+	 * Checks if peer has chunk
+	 * @param fileId 
+	 * @param chunkNo
+	 * @return
+	 */
+	public boolean hasChunk(String fileId, int chunkNo) {
+		for (Chunk chunk : chunklist) {
+			if(chunk.getFileId().equals(fileId) && chunk.getChunkNo() == chunkNo)
+				return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Returns chunk with fileId and chunkNo
+	 * @param fileId
+	 * @param chunkNo
+	 * @return
+	 */
+	public Chunk searchChunk(String fileId, int chunkNo) {
+		Chunk toSend = null;
+		for (Chunk chunk : chunklist) {
+			if(chunk.getFileId().equals(fileId) && chunk.getChunkNo() == chunkNo)
+				toSend = chunk;
+		}
+		return toSend;
+	}
+	
+	/**
+	 * Checks if it has already received that chunk (used when restoring a file)
+	 * @param fileId
+	 * @param chunkNo
+	 * @return
+	 */
+	public boolean alreadyExists(String fileId, int chunkNo) {
+		for (Chunk chunk : chunksReceived) {
+			if(chunk.getFileId().equals(fileId) && chunk.getChunkNo() == chunkNo) 
+				return true;
+		}
+		return false;
+	}
+	
+	public String getFilename(String fileId) {
+		for(Map.Entry<String, String> filenames: backupList.entrySet()) {
+			if(filenames.getValue().equals(fileId)) {
+				return filenames.getKey();
+			}
+		}
+		return null;
+	}
+	public Integer getFileNumberChunks(String string) {
+		return this.backupList2.get(string);
+	}
+
+	public Boolean isBackedUp(String filename) {
+		return this.backupList.containsKey(filename);
+	}
+	
+	public Map<String, String> getBackupList() {
+		return backupList;
+	}
+
+	public Map<String, Integer> getBackupList2() {
+		return backupList2;
 	}
 }

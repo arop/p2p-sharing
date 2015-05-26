@@ -65,5 +65,9 @@ public class User {
 	   return "User [user_id=" + user_id + ", username=" + username + ", email="+ email + ", password_hash=" + password_hash + ", ip=" + ip + ", port="+port+"]";
 	}
 
+	public void setPasswordHash(String object) {
+		this.password_hash = object;
+	}
+
 
 }

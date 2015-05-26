@@ -32,9 +32,12 @@ public class Peer extends Thread {
 	private ReceiveThread_MC rcv_MC;
 	private ReceiveThread_MDB rcv_MDB;
 	private ReceiveThread_MDR rcv_MDR;
+	
 	private ArrayList<Chunk> chunklist;
+	
 	private ArrayList<Integer> portList;
 	private ArrayList<String> ipList;
+	
 	private Map <String, String> backupList;
 	private Map <String, Integer> backupList2;
 
@@ -63,7 +66,7 @@ public class Peer extends Thread {
 		//degMonitor = new DegreeMonitorThread(this);
 
 		storedMessagesReceived = new ArrayList<Chunk>();
-		chunklist = new ArrayList<Chunk>();
+		
 		chunksReceived = new ArrayList<Chunk>();
 		portList = new ArrayList<Integer>();
 		ipList = new ArrayList<String>();
@@ -71,6 +74,7 @@ public class Peer extends Thread {
 		chunksToReceive = 0;
 		hasReceivedPutchunk = false;
 
+		chunklist = new ArrayList<Chunk>();
 		backupList = new HashMap<String, String>();
 		backupList2 = new HashMap<String, Integer>();
 

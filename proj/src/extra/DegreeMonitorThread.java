@@ -2,18 +2,14 @@ package extra;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import main.Chunk;
-import main.Peer;
 
 /**
  * Class used to check replication degrees
@@ -23,10 +19,8 @@ import main.Peer;
 public class DegreeMonitorThread extends Thread {
 	private Map <Chunk, Integer> degreeListSent;
 	private Map <Chunk, Integer> degreeListStored;
-	private Peer main;
 
-	public DegreeMonitorThread(Peer in) throws IOException {
-		main = in;
+	public DegreeMonitorThread() throws IOException {
 		degreeListSent = new HashMap<Chunk, Integer>();
 		degreeListStored = new HashMap<Chunk, Integer>();
 
@@ -46,17 +40,12 @@ public class DegreeMonitorThread extends Thread {
 				Thread.sleep(10000);
 				FileManagement.saveMapToFile(degreeListSent, "files\\lists\\degreeListSent.txt");
 				FileManagement.saveMapToFile(degreeListStored, "files\\lists\\degreeListStored.txt");
-				analyzeDegrees();
+				//analyzeDegrees();
 			} catch (IOException | InterruptedException e) {
-				e.printStackTrace();
-			} catch (NoSuchAlgorithmException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
 	}
-
-
 
 	public boolean hasSent(Chunk c) {
 		return degreeListSent.containsKey(c);
@@ -176,7 +165,7 @@ public class DegreeMonitorThread extends Thread {
 	 * @throws NoSuchAlgorithmException
 	 * @throws InterruptedException
 	 */
-	public void analyzeDegrees() throws FileNotFoundException, NoSuchAlgorithmException, InterruptedException {
+	/*public void analyzeDegrees() throws FileNotFoundException, NoSuchAlgorithmException, InterruptedException {
 		if(!main.isBackuping()) {
 			for (Map.Entry<Chunk, Integer> entry : degreeListSent.entrySet()) {
 				if(entry.getValue() < entry.getKey().getReplicationDeg() ) {
@@ -196,6 +185,6 @@ public class DegreeMonitorThread extends Thread {
 				}
 			}
 		}
-	}
+	}*/
 
 }

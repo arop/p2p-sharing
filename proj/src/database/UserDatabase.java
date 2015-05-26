@@ -171,16 +171,18 @@ public class UserDatabase {
 	 * 
 	 * @param email
 	 * @param password
-	 * @return user id, or -1 if any error occurs
+	 * @return user, or null if any error occurs
 	 */
-	public int login(String email, String password){
+	public User login(String email, String password){
 		
 		User user = getUserByEmail(email);
 		if (user == null)
-			return -1;
-		if (BCrypt.checkpw(password, user.getPasswordHash()))
-			return user.getId();
-		return -1;
+			return null;
+		if (BCrypt.checkpw(password, user.getPasswordHash())) {
+			user.setPasswordHash(null);
+			return user;
+		}
+		return null;
 	}
 
 	/**
