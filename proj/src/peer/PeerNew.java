@@ -11,16 +11,16 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.lang.reflect.Type;
-import java.net.ConnectException;
-import java.net.SocketTimeoutException;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.Security;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
+import java.util.Map.Entry;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocket;
@@ -36,7 +36,6 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.sun.net.ssl.internal.ssl.Provider;
 
-import extra.DegreeMonitorThread;
 import extra.FileManagement;
 import extra.Tools;
 
@@ -45,7 +44,9 @@ public class PeerNew {
 	private String serverAddress = "localhost";
 	private int serverPort = 16500; 
 
-	private DegreeMonitorThread degMonitor;
+	//private DegreeMonitorThread degMonitor;
+	private Map <Chunk, Integer> degreeListSent;
+
 
 	ArrayList<User> friends;
 
@@ -60,12 +61,19 @@ public class PeerNew {
 		backupList = new HashMap<String, String>();
 		backupList2 = new HashMap<String, Integer>();
 
-		degMonitor = new DegreeMonitorThread();
+		//degMonitor = new DegreeMonitorThread();
 
 		loadChunkList();
 		loadBackupList();
+		
+		degreeListSent = new HashMap<Chunk, Integer>();
+		
+		if(degreeListSent.isEmpty()) {
+			readDegreeList("files\\lists\\degreeListSent.txt");
+		}
 
-		degMonitor.start();
+
+		//degMonitor.start();
 	}
 
 	private LoginFrame loginFrame;
@@ -187,7 +195,7 @@ public class PeerNew {
 		peer.startPeer();	
 	}
 
-	public void startRegularBackupProtocol(String filePath, int repDegree) {
+	public void startRegularBackupProtocol(String filePath, int repDegree) throws IOException {
 		//1-> split file into chunks
 		ArrayList<Chunk> chunks = null; 
 		try {
@@ -198,18 +206,20 @@ public class PeerNew {
 
 		//2 -> get online users IPs and ports from server
 		ArrayList<User> onlineUsers = this.getOnlineUsersFromServer();
-		
+
 		if (onlineUsers == null)
 			System.out.println("Null online users");
 		else {
-			for(User user : onlineUsers){
+		
+			for(User user : new ArrayList<User> (onlineUsers)){
+				if(user.getId() == localUser.getId()) onlineUsers.remove(user);
 				System.out.println("User: "+user.getIp()+":"+user.getPort());
 			}
-			onlineUsers.remove(localUser);
+
 		}
 
 		//3 -> send each chunk for repDegree random users
-		if(onlineUsers.size()-1 < repDegree) {
+		if(onlineUsers.size() < repDegree) {
 			System.err.println("ERROR: Impossible rep degree at this point");
 			return;
 		}
@@ -226,7 +236,7 @@ public class PeerNew {
 
 			while(tempRepDegree > 0) {
 				int index = r.nextInt(onlineUsers.size());
-				
+
 				while(usedIndexes.contains(index))
 					index = r.nextInt(onlineUsers.size());
 
@@ -236,6 +246,16 @@ public class PeerNew {
 				System.out.println("sending message");
 				this.sendMessage(msg, temp.getIp(), temp.getPort(), 0);
 				tempRepDegree--;
+			}
+
+			String[] cenas = filePath.split("\\\\");
+
+			addToBackupList(cenas[cenas.length-1],chunks.get(0).getFileId(),chunks.size());
+			
+			refreshBackupList();
+
+			for (Chunk chunk2 : chunks) {
+				addToMap("send", chunk2);
 			}
 		}	
 	}
@@ -300,6 +320,7 @@ public class PeerNew {
 		return response;
 	}
 
+
 	private SSLSocket getSocketConnection(String host, int port) {
 		try {
 			/* Create keystore */
@@ -313,6 +334,7 @@ public class PeerNew {
 			ctx.init(null, tmf.getTrustManagers(), null);
 			SSLSocketFactory factory = ctx.getSocketFactory();
 
+			
 			return (SSLSocket) factory.createSocket(host, port);
 		} catch (Exception e) {
 			System.out.println("Problem starting auth server: "+ e.getMessage()+"\n"+e.getCause());
@@ -444,40 +466,41 @@ public class PeerNew {
 	/**
 	 * Deletes file from lists
 	 * @param fileId
+	 * @throws IOException 
 	 */
-	public void deleteFromSentLists(String fileId) {
+	public void deleteFromSentLists(String fileId) throws IOException {
 		String filename = getFilename(fileId);
 		backupList.remove(filename);
 		backupList2.remove(filename);
 
-		degMonitor.removeFromSentMap(fileId);
+		removeFromSentMap(fileId);
 	}
 
 	/**
 	 * Deletes Chunk with maximum replication degree ratio
 	 * @throws IOException
 	 */
-	public void deleteWorstChunk() throws IOException {
-		Chunk chunk = degMonitor.mostRedundant();
-
-		if(chunk != null) {
-			String filename = chunk.getFileId() + "_chunk_" + chunk.getChunkNo();
-
-			File f = new File("files\\backups\\"+filename);
-			System.gc();
-			f.delete(); 
-
-			degMonitor.removeFromStoredMap(chunk);
-
-			//this.sendMessage(Tools.generateMessage("REMOVED", chunk),MC_IP,MC_Port);
-		}
-
-		FileManagement.saveMapToFile(degMonitor.getStoredMap(),"files\\lists\\degreeListStored.txt");
-
-		/* reloads chunk list */
-		chunklist.clear();
-		loadChunkList();
-	}
+//	public void deleteWorstChunk() throws IOException {
+//		//Chunk chunk = mostRedundant();
+//
+//		if(chunk != null) {
+//			String filename = chunk.getFileId() + "_chunk_" + chunk.getChunkNo();
+//
+//			File f = new File("files\\backups\\"+filename);
+//			System.gc();
+//			f.delete(); 
+//
+//			//removeFromStoredMap(chunk);
+//
+//			//this.sendMessage(Tools.generateMessage("REMOVED", chunk),MC_IP,MC_Port);
+//		}
+//
+//		//FileManagement.saveMapToFile(getStoredMap(),"files\\lists\\degreeListStored.txt");
+//
+//		/* reloads chunk list */
+//		chunklist.clear();
+//		loadChunkList();
+//	}
 
 	/**
 	 * Checks if peer has chunk
@@ -545,4 +568,64 @@ public class PeerNew {
 	public Map<String, Integer> getBackupList2() {
 		return backupList2;
 	}
+
+	public void clearChunkList() {
+		chunklist.clear();
+	}
+	
+	/* ============== OBRAS ============== */
+	
+	public void readDegreeList(String file) throws IOException {
+		if(!FileManagement.fileExists(file))
+			(new File(file)).createNewFile();
+		else {
+			try(BufferedReader br = new BufferedReader(new FileReader(new File(file)))) {
+				for(String line; (line = br.readLine()) != null; ) {
+					String[] piecesOfLine = line.split(" +");
+
+					Chunk temp = new Chunk(piecesOfLine[0],Integer.parseInt(piecesOfLine[1]),Integer.parseInt(piecesOfLine[2]));
+						degreeListSent.put(temp,Integer.parseInt(piecesOfLine[3]));
+				}
+				br.close();
+			}
+		}
+	}
+	
+	public void addToMap(String whatmap, Chunk chunk) throws IOException {
+		if(whatmap.equals("send")) degreeListSent.put(chunk,0);
+		else { 
+			System.err.println("invalid map type");
+		}
+		
+		FileManagement.saveMapToFile(degreeListSent, "files\\lists\\degreeListSent.txt");
+
+	}
+	
+	public void removeFromSentMap(String fileId) throws IOException {		
+		for(Iterator<Map.Entry<Chunk, Integer>> it = degreeListSent.entrySet().iterator(); it.hasNext(); ) {
+			Entry<Chunk, Integer> entry = it.next();
+			if(entry.getKey().getFileId().equals(fileId)) {
+				it.remove();
+			}
+		}
+		
+		FileManagement.saveMapToFile(degreeListSent, "files\\lists\\degreeListSent.txt");
+
+	}
+	
+	public Map<Chunk, Integer> getSentMap() {
+		return degreeListSent;
+	}
+	
+	public void incConfirmations(String fileId2, int chunkNo2, Map<Chunk,Integer> m) throws IOException {
+		for (Map.Entry<Chunk, Integer> entry : m.entrySet()) {
+			if(entry.getKey().getFileId().equals(fileId2) && entry.getKey().getChunkNo() == chunkNo2) {
+				m.put(entry.getKey(),entry.getValue() + 1);
+			}
+		}
+		
+		FileManagement.saveMapToFile(degreeListSent, "files\\lists\\degreeListSent.txt");
+
+	}
+
 }
