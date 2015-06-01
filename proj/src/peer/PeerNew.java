@@ -22,7 +22,10 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Map.Entry;
 
+import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLServerSocket;
+import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManagerFactory;
@@ -65,12 +68,12 @@ public class PeerNew {
 
 		loadChunkList();
 		loadBackupList();
-		
+
 		degreeListSent = new HashMap<Chunk, Integer>();
 		
 		if(degreeListSent.isEmpty()) {
 			readDegreeList("files\\lists\\degreeListSent.txt");
-		}
+	}
 
 
 		//degMonitor.start();
@@ -206,7 +209,7 @@ public class PeerNew {
 
 		//2 -> get online users IPs and ports from server
 		ArrayList<User> onlineUsers = this.getOnlineUsersFromServer();
-
+		
 		if (onlineUsers == null)
 			System.out.println("Null online users");
 		else {
@@ -236,7 +239,7 @@ public class PeerNew {
 
 			while(tempRepDegree > 0) {
 				int index = r.nextInt(onlineUsers.size());
-
+				
 				while(usedIndexes.contains(index))
 					index = r.nextInt(onlineUsers.size());
 
@@ -256,10 +259,90 @@ public class PeerNew {
 
 			for (Chunk chunk2 : chunks) {
 				addToMap("send", chunk2);
-			}
 		}	
 	}
+	}
 
+	
+	public boolean shareFileWithFriend(int friend_id){
+		
+		User friend;
+		if ( (friend= this.getUserFromServer(friend_id)) == null)
+			return false;
+		
+		String filePath = Tools.selectFileFrame();
+		File f = new File(filePath);
+		
+		String answer = sendMessage(Tools.generateJsonMessage("BACKUPFILE", this.localUser.getId(), f.getName()+"#"+f.length()), 
+				friend.getIp(), friend.getPort(), 0);
+		
+		if (answer == null)
+			return false;
+		
+		if (!Tools.getType(answer).equals("OK")) 
+			return false;
+				
+		int friendPortForShare = Integer.parseInt(Tools.getBody(answer));
+		
+		//create thread to send file
+		FileShareThreadSend t;
+		try {
+			t = new FileShareThreadSend(friend, filePath, friendPortForShare, this);
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+			return false;
+		}
+		
+		t.start();	
+		
+		return true;
+	}
+	
+	/**
+	 * Starts thread where peer will receive file shared by friend.
+	 * @param friend_id
+	 * @param fileName
+	 * @param fileSize
+	 * @return port where ssl socket is open. negative in case of error.
+	 */
+	public int startFileShareReceiveThread(int friend_id, String fileName, long fileSize){
+		int port = -1;
+		
+		try {
+			FileShareThreadReceive t = new FileShareThreadReceive(friend_id, fileName, fileSize, this);
+			t.start();
+			while(true){
+				port = t.getPort();
+				if (port > 0)
+					break;
+			}
+		} catch (IOException e) {
+			System.out.println("Unable to create file...");
+		}
+		catch (Exception e){
+			System.out.println("Unexpected exception creating file share receive thread...");
+			System.out.println("Exception message: "+e.getMessage());
+			e.printStackTrace();
+		}
+		
+		return port;
+	}
+	
+	public User getUserFromServer(int user_id){
+		User u = null;
+		String answer = sendMessage(Tools.generateJsonMessage("GETUSER", String.valueOf(user_id)), this.serverAddress, this.serverPort, 0);
+		if (answer == null)
+			return null;
+		
+		if (!Tools.getType(answer).equals("USER"))
+			return null;
+		
+		Gson gson = new Gson();
+		u = (User) gson.fromJson(Tools.getBody(answer), User.class);
+		return u;
+	}
+	
+	
 	/**
 	 * @param msg
 	 * @param ip_dest
@@ -341,6 +424,37 @@ public class PeerNew {
 			return null;
 		}
 	}
+	
+	
+	public SSLServerSocket getServerSocket(int socket_port) {
+	    try {
+	    	
+	        /* Create keystore */
+	        KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+	        keyStore.load(new FileInputStream("..\\certificates\\server\\keystore"), "peerkey".toCharArray());
+
+	        
+	        KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+	    	kmf.init(keyStore, "peerkey".toCharArray()); // That's the key's password, if different.
+	        
+	        
+	        /* Get factory for the given keystore */
+	        TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+	        tmf.init(keyStore);
+	        
+	        SSLContext ctx = SSLContext.getInstance("SSL");
+	        //ctx.init(null, tmf.getTrustManagers(), null);
+	        ctx.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
+	        
+	        SSLServerSocketFactory factory = ctx.getServerSocketFactory();
+
+	        return (SSLServerSocket) factory.createServerSocket(socket_port);
+	    } catch (Exception e) {
+	       System.out.println("Problem creating SSL Server Socket: "+ e.getMessage()+"\n"+e.getCause());
+	       return null;
+	    }
+	    
+	}
 
 	/**
 	 * Create folders
@@ -363,6 +477,10 @@ public class PeerNew {
 		File dir4 = new File("files\\backups");
 		if(!dir4.exists())
 			dir4.mkdir();
+		
+		File dir5 = new File("files\\shared-with-me");
+		if(!dir5.exists())
+			dir5.mkdir();
 	}
 
 	public void addToBackupList(String string, String fId,int numberOfChunks) {
@@ -571,7 +689,7 @@ public class PeerNew {
 
 	public void clearChunkList() {
 		chunklist.clear();
-	}
+}
 	
 	/* ============== OBRAS ============== */
 	

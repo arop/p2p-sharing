@@ -290,4 +290,16 @@ public abstract class Tools {
 	    }
 	    return null;	
 	}
+	
+	
+	/**
+	 * 
+	 * @param fileName
+	 * @return array with 2 elements. First is file name, second is file extension
+	 */
+	public static String[] splitFileExtension(String fileName){
+		return fileName.split("\\.(?=[^\\.]+$)");
+	}
+	
+	
 }

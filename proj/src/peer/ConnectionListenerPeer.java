@@ -151,6 +151,18 @@ public class ConnectionListenerPeer extends Thread {
 					mainThread.getSentMap());
 			break;
 			
+		case "BACKUPFILE":
+			try{
+				int friend_id = Integer.parseInt(messageHeadParts[2]);
+				String[] bodySplit = Tools.getBody(message).split("#");
+				
+				int port = mainThread.startFileShareReceiveThread(friend_id, bodySplit[0], Long.parseLong(bodySplit[1]));
+				return Tools.generateJsonMessage("OK", String.valueOf(port));
+			}
+			catch (ArrayIndexOutOfBoundsException e){
+				return Tools.generateMessage("NOTOK");
+			}
+			
 		default:
 			break;				
 		}

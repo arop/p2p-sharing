@@ -7,3 +7,20 @@ java -Djavax.net.ssl.trustStore=truststore -Djavax.net.ssl.trustStorePassword=si
 //SQLITE
 java -classpath ".;jars/sqlite-jdbc-3.8.10.1.jar" Sample   # in Windows
 
+
+PROTOCOLO PARTILHA FILE COMPLETO COM AMIGO
+
+  1 -> pedir ao servidor último IP conhecido do amigo;
+  2 -> enviar msg "BACKUPFILE" para amigo; 
+	"BACKUPFILE" tem no body nome e tamanho do ficheiro (em bytes); -> BACKUPFILE 1.0 MeuId \r\n\r\n NomeDoFicheiro TamanhoDoFicheiro
+  3 -> amigo ao receber "BACKUPFILE" cria uma thread com socket novo para receber ficheiro
+  4 -> amigo envia como resposta ao "BACKUPFILE" uma msg "OPENPORT", cujo body contém a porta do socket aberto no ponto 3
+  5 -> recebe dados até receber o final.
+
+	i -> ficheiro é enviado linha a linha
+	ii -> cada linha começa por "LINE#"
+		a -> quando recebe um LINE, responde OK
+	iii -> quando receber "END#", significa que já recebeu o ficheiro todo
+		a -> responde OK também
+
+	iv -> em caso de qualquer erro, responde FAIL
