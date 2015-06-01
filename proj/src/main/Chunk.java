@@ -8,10 +8,19 @@ package main;
 public class Chunk {
 	private byte[] chunk;
 	private String fileId;
+	private String fileName;
 	private int chunkNo, replicationDeg = 1;
 
 	public Chunk(byte[] c) {
 		chunk = c.clone();
+	}
+
+	public String getFileName() {
+		return fileName;
+	}
+
+	public void setFileName(String fileName) {
+		this.fileName = fileName;
 	}
 
 	public Chunk(byte[] c, int number, int degree, String fileId) {

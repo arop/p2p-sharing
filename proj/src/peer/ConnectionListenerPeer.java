@@ -1,6 +1,7 @@
 package peer;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -122,22 +123,46 @@ public class ConnectionListenerPeer extends Thread {
 
 		case "PUTCHUNK":
 			Chunk temp = new Chunk(Tools.getBody(message).getBytes());
-			
-			splitMessage(temp,Tools.getHead(message));
-			FileManagement.materializeChunk(temp);		
-			
-			return Tools.generateMessage("STORED", temp);
 
+			splitMessage(temp,Tools.getHead(message));
+
+			if(!mainThread.hasChunk(temp.getFileId(), temp.getChunkNo())) {
+				if(Tools.folderSize(new File("files\\backups")) + temp.getByteArray().length-1 <= Tools.getFolderSize() ) {
+					FileManagement.materializeChunk(temp);
+					mainThread.clearChunkList();
+					mainThread.loadChunkList();
+		//			mainThread.addToMap("stored",temp);
+					return Tools.generateMessage("STORED", temp);
+				}
+			}
+			else {
+				return Tools.generateMessage("STORED", temp);
+			}
+
+			return null;
+			
+		case "STORED": 
+			Chunk ficticio = new Chunk(Tools.getBody(message).getBytes());
+			splitMessage(ficticio,Tools.getHead(message));
+//			mainThread.addStoredChunk(ficticio);
+			
+			//adicionou logo era novo, portanto incrementa
+			mainThread.incConfirmations(ficticio.getFileId(),ficticio.getChunkNo(),
+					mainThread.getSentMap());
+			break;
+			
 		default:
 			break;				
 		}
 		return null;
 	}
-	
+
 	void splitMessage(Chunk chunk, String message) {
 		String[] temp = message.split(" +");
 		chunk.setFileId(temp[2]);
 		chunk.setChunkNo(Integer.parseInt(temp[3].trim()));
 		chunk.setReplicationDeg(Integer.parseInt(temp[4].trim()));
 	}
+	
+	
 }

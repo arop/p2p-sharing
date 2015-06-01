@@ -5,6 +5,7 @@ import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -81,7 +82,12 @@ public class GUI extends JFrame {
 				String filePath;
 				if( (filePath = Tools.selectFileFrame()) != null){
 					System.out.println("This file was selected: "+filePath);
-					mainThread.startRegularBackupProtocol(filePath, 1); //TODO replication degree hardcoded
+					try {
+						mainThread.startRegularBackupProtocol(filePath, 1);
+					} catch (IOException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					} //TODO replication degree hardcoded
 				}
 			}
 		});
