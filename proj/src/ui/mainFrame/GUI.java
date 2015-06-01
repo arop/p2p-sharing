@@ -41,7 +41,6 @@ public class GUI extends JFrame {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setResizable(false);
 
-        
         List<FriendCircle> circles = new ArrayList<FriendCircle>();
         /*circles.add(new FriendCircle("Circle 1", friendsList.subList(2, 6)));
         circles.add(new FriendCircle("Circle 2", friendsList.subList(13, 17)));
@@ -106,9 +105,7 @@ public class GUI extends JFrame {
     	panel.add(button);
     	
     	return panel;
-    	
     }
-    
     
     public static void main(String[] args) {
 

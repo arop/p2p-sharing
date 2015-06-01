@@ -129,17 +129,20 @@ public abstract class FileManagement {
 	 * @param string
 	 * @param fId
 	 * @param numberOfChunks
+	 * @param usersID 
 	 */
-	public static void addToBackupListFile(String string, String fId,int numberOfChunks) {
+	public static void addToBackupListFile(String string, String fId,int numberOfChunks, ArrayList<Integer> usersID) {
 		try {
 			PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter("files\\lists\\backup_list.txt")));
-			out.println(string + " " +  fId + " " + numberOfChunks);
+			out.print(string + " " +  fId + " " + numberOfChunks);
+			for(Integer id: usersID)
+				out.print(" " + id);
+			out.println();
 			out.close();
 		} catch (IOException e) {
 			e.getMessage();
 		}		
 	}
-
 
 	/**
 	 * Reads a physical chunk, and creates a chunk with it

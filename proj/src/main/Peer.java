@@ -157,7 +157,7 @@ public class Peer extends Thread {
 			out.close();
 		}
 		else for (Map.Entry<String, String> entry : backupList.entrySet()) {
-			FileManagement.addToBackupListFile(entry.getKey(), entry.getValue(), backupList2.get(entry.getKey()));
+			//FileManagement.addToBackupListFile(entry.getKey(), entry.getValue(), backupList2.get(entry.getKey()));
 		}
 	}
 
