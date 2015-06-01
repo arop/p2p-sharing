@@ -5,8 +5,6 @@ import java.awt.event.MouseEvent;
 
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
-import javax.swing.JTable;
-
 import peer.PeerNew;
 
 public class FriendRightClickPopUp extends JPopupMenu{
