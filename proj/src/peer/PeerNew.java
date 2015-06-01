@@ -404,7 +404,7 @@ public class PeerNew {
 	}
 
 
-	private SSLSocket getSocketConnection(String host, int port) {
+	SSLSocket getSocketConnection(String host, int port) {
 		try {
 			/* Create keystore */
 			KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
