@@ -50,7 +50,6 @@ public class PeerNew {
 	//private DegreeMonitorThread degMonitor;
 	private Map <Chunk, Integer> degreeListSent;
 
-
 	ArrayList<User> friends;
 
 	private Map <String, String> backupList;
@@ -58,25 +57,22 @@ public class PeerNew {
 
 	private ArrayList<Chunk> chunklist;
 	private ArrayList<Chunk> chunksReceived;
+	private Map<String,ArrayList<Integer>> chunksUserID;
 
 	public PeerNew() throws IOException {		
 		chunklist = new ArrayList<Chunk>();
 		backupList = new HashMap<String, String>();
 		backupList2 = new HashMap<String, Integer>();
-
-		//degMonitor = new DegreeMonitorThread();
+		chunksUserID = new HashMap<String,ArrayList<Integer>>();
 
 		loadChunkList();
 		loadBackupList();
 
 		degreeListSent = new HashMap<Chunk, Integer>();
-		
+
 		if(degreeListSent.isEmpty()) {
 			readDegreeList("files\\lists\\degreeListSent.txt");
 	}
-
-
-		//degMonitor.start();
 	}
 
 	private LoginFrame loginFrame;
@@ -213,12 +209,10 @@ public class PeerNew {
 		if (onlineUsers == null)
 			System.out.println("Null online users");
 		else {
-		
 			for(User user : new ArrayList<User> (onlineUsers)){
 				if(user.getId() == localUser.getId()) onlineUsers.remove(user);
 				System.out.println("User: "+user.getIp()+":"+user.getPort());
 			}
-
 		}
 
 		//3 -> send each chunk for repDegree random users
@@ -231,8 +225,6 @@ public class PeerNew {
 		for (Chunk chunk : chunks) {
 			usedIndexes.clear();
 			String msg = Tools.generateMessage("PUTCHUNK", chunk);
-
-			System.out.println("inside for");
 
 			int tempRepDegree = repDegree;
 			Random r = new Random();
@@ -251,16 +243,31 @@ public class PeerNew {
 				tempRepDegree--;
 			}
 
-			String[] cenas = filePath.split("\\\\");
+			String[] filenameArray = filePath.split("\\\\");
+			String filename = filenameArray[filenameArray.length-1];
 
-			addToBackupList(cenas[cenas.length-1],chunks.get(0).getFileId(),chunks.size());
-			
+			addToBackupList(filename,chunks.get(0).getFileId(),chunks.size());
+
+			for(Integer tempUser: usedIndexes) {
+				addUserToBackupFile(filename, onlineUsers.get(tempUser));
+			}
+
 			refreshBackupList();
 
 			for (Chunk chunk2 : chunks) {
 				addToMap("send", chunk2);
 		}	
 	}
+	}
+
+	private void addUserToBackupFile(String filename, User user) {
+		if(chunksUserID.containsKey(filename))
+			chunksUserID.get(filename).add(user.getId());
+		else {
+			ArrayList<Integer> temp = new ArrayList<Integer>();
+			temp.add(user.getId());
+			chunksUserID.put(filename, temp);
+		}
 	}
 
 	
@@ -379,7 +386,7 @@ public class PeerNew {
 
 			//GET RESPONSE 
 			response = in.readLine();
-			response += in.readLine(); 				//TODO (isto está assim hardcoded pq o 
+			response += in.readLine(); 				//(isto está assim hardcoded pq o 
 			response += "\r\n\r\n"+in.readLine(); 	//readLine lê até ao \r\n apenas)
 
 			//PARSE RESPONSE
@@ -403,7 +410,6 @@ public class PeerNew {
 		return response;
 	}
 
-
 	SSLSocket getSocketConnection(String host, int port) {
 		try {
 			/* Create keystore */
@@ -417,7 +423,7 @@ public class PeerNew {
 			ctx.init(null, tmf.getTrustManagers(), null);
 			SSLSocketFactory factory = ctx.getSocketFactory();
 
-			
+
 			return (SSLSocket) factory.createSocket(host, port);
 		} catch (Exception e) {
 			System.out.println("Problem starting auth server: "+ e.getMessage()+"\n"+e.getCause());
@@ -496,7 +502,7 @@ public class PeerNew {
 			out.close();
 		}
 		else for (Map.Entry<String, String> entry : backupList.entrySet()) {
-			FileManagement.addToBackupListFile(entry.getKey(), entry.getValue(), backupList2.get(entry.getKey()));
+			FileManagement.addToBackupListFile(entry.getKey(), entry.getValue(), backupList2.get(entry.getKey()), chunksUserID.get(entry.getKey()));
 		}
 	}
 
@@ -513,6 +519,10 @@ public class PeerNew {
 					String[] piecesOfLine = line.split(" +");
 					backupList.put(piecesOfLine[0],piecesOfLine[1]);
 					backupList2.put(piecesOfLine[0],Integer.parseInt(piecesOfLine[2]));
+
+					chunksUserID.put(piecesOfLine[0],new ArrayList<Integer>());
+					for(int i = 2; i < piecesOfLine.length; i++)
+						chunksUserID.get(piecesOfLine[0]).add(Integer.parseInt(piecesOfLine[i]));
 				}
 				br.close();
 			}
@@ -598,27 +608,27 @@ public class PeerNew {
 	 * Deletes Chunk with maximum replication degree ratio
 	 * @throws IOException
 	 */
-//	public void deleteWorstChunk() throws IOException {
-//		//Chunk chunk = mostRedundant();
-//
-//		if(chunk != null) {
-//			String filename = chunk.getFileId() + "_chunk_" + chunk.getChunkNo();
-//
-//			File f = new File("files\\backups\\"+filename);
-//			System.gc();
-//			f.delete(); 
-//
-//			//removeFromStoredMap(chunk);
-//
-//			//this.sendMessage(Tools.generateMessage("REMOVED", chunk),MC_IP,MC_Port);
-//		}
-//
-//		//FileManagement.saveMapToFile(getStoredMap(),"files\\lists\\degreeListStored.txt");
-//
-//		/* reloads chunk list */
-//		chunklist.clear();
-//		loadChunkList();
-//	}
+	//	public void deleteWorstChunk() throws IOException {
+	//		//Chunk chunk = mostRedundant();
+	//
+	//		if(chunk != null) {
+	//			String filename = chunk.getFileId() + "_chunk_" + chunk.getChunkNo();
+	//
+	//			File f = new File("files\\backups\\"+filename);
+	//			System.gc();
+	//			f.delete(); 
+	//
+	//			//removeFromStoredMap(chunk);
+	//
+	//			//this.sendMessage(Tools.generateMessage("REMOVED", chunk),MC_IP,MC_Port);
+	//		}
+	//
+	//		//FileManagement.saveMapToFile(getStoredMap(),"files\\lists\\degreeListStored.txt");
+	//
+	//		/* reloads chunk list */
+	//		chunklist.clear();
+	//		loadChunkList();
+	//	}
 
 	/**
 	 * Checks if peer has chunk
@@ -690,9 +700,9 @@ public class PeerNew {
 	public void clearChunkList() {
 		chunklist.clear();
 }
-	
+
 	/* ============== OBRAS ============== */
-	
+
 	public void readDegreeList(String file) throws IOException {
 		if(!FileManagement.fileExists(file))
 			(new File(file)).createNewFile();
@@ -702,23 +712,23 @@ public class PeerNew {
 					String[] piecesOfLine = line.split(" +");
 
 					Chunk temp = new Chunk(piecesOfLine[0],Integer.parseInt(piecesOfLine[1]),Integer.parseInt(piecesOfLine[2]));
-						degreeListSent.put(temp,Integer.parseInt(piecesOfLine[3]));
+					degreeListSent.put(temp,Integer.parseInt(piecesOfLine[3]));
 				}
 				br.close();
 			}
 		}
 	}
-	
+
 	public void addToMap(String whatmap, Chunk chunk) throws IOException {
 		if(whatmap.equals("send")) degreeListSent.put(chunk,0);
 		else { 
 			System.err.println("invalid map type");
 		}
-		
+
 		FileManagement.saveMapToFile(degreeListSent, "files\\lists\\degreeListSent.txt");
 
 	}
-	
+
 	public void removeFromSentMap(String fileId) throws IOException {		
 		for(Iterator<Map.Entry<Chunk, Integer>> it = degreeListSent.entrySet().iterator(); it.hasNext(); ) {
 			Entry<Chunk, Integer> entry = it.next();
@@ -726,22 +736,22 @@ public class PeerNew {
 				it.remove();
 			}
 		}
-		
+
 		FileManagement.saveMapToFile(degreeListSent, "files\\lists\\degreeListSent.txt");
 
 	}
-	
+
 	public Map<Chunk, Integer> getSentMap() {
 		return degreeListSent;
 	}
-	
+
 	public void incConfirmations(String fileId2, int chunkNo2, Map<Chunk,Integer> m) throws IOException {
 		for (Map.Entry<Chunk, Integer> entry : m.entrySet()) {
 			if(entry.getKey().getFileId().equals(fileId2) && entry.getKey().getChunkNo() == chunkNo2) {
 				m.put(entry.getKey(),entry.getValue() + 1);
 			}
 		}
-		
+
 		FileManagement.saveMapToFile(degreeListSent, "files\\lists\\degreeListSent.txt");
 
 	}
