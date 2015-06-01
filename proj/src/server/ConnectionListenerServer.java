@@ -1,22 +1,15 @@
 package server;
 
 import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.lang.reflect.Type;
-import java.security.KeyStore;
 import java.security.PrivilegedActionException;
 import java.util.ArrayList;
 
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLServerSocket;
-import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
-
-import javax.net.ssl.TrustManagerFactory;
 
 import user.User;
 
@@ -43,7 +36,7 @@ public class ConnectionListenerServer extends Thread{
 		while(true){
 			try {
 				
-				sslServerSocket = getServerSocket(this.port);
+				sslServerSocket = mainThread.getServerSocket(this.port);
 				if (sslServerSocket == null){
 					System.out.println("Failed to create socket. Port: "+this.port);
 					//System.exit(0);
@@ -96,35 +89,6 @@ public class ConnectionListenerServer extends Thread{
 		}
 	}
 	
-	private SSLServerSocket getServerSocket(int socket_port) {
-	    try {
-	    	
-	        /* Create keystore */
-	        KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-	        keyStore.load(new FileInputStream("..\\certificates\\server\\keystore"), "peerkey".toCharArray());
-
-	        
-	        KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-	    	kmf.init(keyStore, "peerkey".toCharArray()); // That's the key's password, if different.
-	        
-	        
-	        /* Get factory for the given keystore */
-	        TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-	        tmf.init(keyStore);
-	        
-	        SSLContext ctx = SSLContext.getInstance("SSL");
-	        //ctx.init(null, tmf.getTrustManagers(), null);
-	        ctx.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
-	        
-	        SSLServerSocketFactory factory = ctx.getServerSocketFactory();
-
-	        return (SSLServerSocket) factory.createServerSocket(socket_port);
-	    } catch (Exception e) {
-	       System.out.println("Problem creating SSL Server Socket: "+ e.getMessage()+"\n"+e.getCause());
-	       return null;
-	    }
-	    
-	}
 	
 
 	/**
@@ -136,7 +100,7 @@ public class ConnectionListenerServer extends Thread{
 	public String parseReceivedMessage(String message, String sourceAddress){
 		String[] messageHeadParts = Tools.getHead(message).split(" +");
 		int user_id;
-		Gson gson = new Gson();;
+		Gson gson = new Gson();
 		Type arrayListOfUsers = new TypeToken<ArrayList<User>>(){}.getType();
 		
 		switch(messageHeadParts[0]) {
@@ -200,6 +164,11 @@ public class ConnectionListenerServer extends Thread{
 				return Tools.generateMessage("OK");
 			return Tools.generateMessage("NOTOK");
 
+		case "GETUSER":
+			User u = mainThread.user_db.getUserById(Integer.parseInt(Tools.getBody(message)));
+			String userJson = gson.toJson(u);
+			return Tools.generateJsonMessage("USER", userJson);
+			
 		default:
 			break;				
 		}
