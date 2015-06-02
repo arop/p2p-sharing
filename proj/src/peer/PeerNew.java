@@ -247,19 +247,15 @@ public class PeerNew {
 				
 				System.out.println("Answer:" + answer);
 				
+				
+				if(answer == null) return;
+				
 				String[] messageHeadParts = Tools.getHead(answer).split(" +");
 
 				if(messageHeadParts[0].equals("STORED")) {
-					System.out.println("TOU AQUI NO STORED YAY!");
 										
 					Chunk ficticio = new Chunk(Tools.getBody(answer).getBytes());
 					con_listener.splitMessage(ficticio,Tools.getHead(answer));
-					
-					System.out.println(ficticio.getFileId());
-					System.out.println(ficticio.getChunkNo());
-					System.out.println(ficticio.getReplicationDeg());
-					System.out.println(ficticio.getByteArray().length);
-					
 					incConfirmations(ficticio.getFileId(),ficticio.getChunkNo(),degreeListSent);
 				}
 
@@ -724,6 +720,7 @@ public class PeerNew {
 
 	public void clearChunkList() {
 		chunklist.clear();
+	}
 		/* ============== OBRAS ============== */
 
 	public void readDegreeList(String file) throws IOException {
@@ -759,7 +756,6 @@ public class PeerNew {
 				it.remove();
 			}
 		}
-		FileManagement.saveMapToFile(degreeListSent, "files\\lists\\degreeListSent.txt");
 		//FileManagement.saveMapToFile(degreeListSent, "files\\lists\\degreeListSent.txt");
 
 	}
@@ -776,8 +772,6 @@ public class PeerNew {
 				m.put(entry.getKey(),entry.getValue()+1);
 			}
 		}
-
-		FileManagement.saveMapToFile(degreeListSent, "files\\lists\\degreeListSent.txt");
 
 		FileManagement.saveMapToFile(m, "files\\lists\\degreeListSent.txt");
 	}

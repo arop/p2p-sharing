@@ -66,7 +66,7 @@ public class FriendsPanel extends JPanel {
 				if (rowindex < 0)
 					return;
 				if (e.isPopupTrigger() && e.getComponent() instanceof JTable ) {
-					JPopupMenu popup = new FriendRightClickPopUp((int) jTable1.getModel().getValueAt(r, 2));
+					JPopupMenu popup = new FriendRightClickPopUp((int) jTable1.getModel().getValueAt(r, 2),mainThread);
 					popup.show(e.getComponent(), e.getX(), e.getY());
 				}
 			}
