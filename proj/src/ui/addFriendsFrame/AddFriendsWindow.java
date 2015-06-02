@@ -34,7 +34,5 @@ public class AddFriendsWindow extends JFrame{
         
         this.pack();
         this.setVisible(true);
-       
 	}
-
 }
