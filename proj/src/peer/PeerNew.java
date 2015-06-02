@@ -760,4 +760,26 @@ public class PeerNew {
 		}
 	}
 
+	public String getFileIdOf(String string) {
+		return this.backupList.get(string);
+	}
+
+	public void startDeleteChunks(String string) throws IOException {
+		if(!isBackedUp(string)) return;
+
+		String fileId = getFileIdOf(string);
+
+		for(Integer id: chunksUserID.get(string)) {
+			User temp = getUserFromServer(id);
+
+			sendMessage(Tools.generateMessage("DELETE", fileId), temp.getIp(), temp.getPort(),0);
+
+			deleteFromSentLists(fileId);
+			refreshBackupList();
+		}
+	}
+
+	public ArrayList<String> getBackedUpFiles() {
+		return new ArrayList<String>(backupList.keySet());
+	}
 }

@@ -53,7 +53,7 @@ public class ConnectionListenerPeer extends Thread {
 					char nextChar;
 
 					while(true) {
-
+					
 						nextChar = (char) in.read();
 						finalString += nextChar;
 
@@ -169,6 +169,10 @@ public class ConnectionListenerPeer extends Thread {
 
 			return null;
 
+		case "DELETE":
+			mainThread.deleteChunksOfFile(messageHeadParts[1]);
+			break;
+			
 		case "BACKUPFILE":
 			try{
 				int friend_id = Integer.parseInt(messageHeadParts[2]);
