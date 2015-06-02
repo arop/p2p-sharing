@@ -25,6 +25,8 @@ public class GUI extends JFrame {
 
 	private PeerNew mainThread;
 	
+	private GeneralInfo generalInfo;
+	
 	public GUI(PeerNew peer) {
 		mainThread = peer;
         initUI();
@@ -58,8 +60,18 @@ public class GUI extends JFrame {
        
         this.add(generateButtonsPanel(100, 500), BorderLayout.WEST);
         this.add(friendshipsPanel, BorderLayout.EAST);
-        this.add(new GeneralInfo(100,500), BorderLayout.CENTER);
+        generalInfo = new GeneralInfo(100,500, mainThread);
         
+        generalInfo.getRefreshButton().addActionListener(new ActionListener()
+		{
+			@Override	
+			public void actionPerformed(ActionEvent e){
+				generalInfo.setNumBackupFiles(mainThread.getBackupList().size());
+			}
+		});
+        
+        this.add(generalInfo, BorderLayout.CENTER);
+                
         this.pack();
     }
 
@@ -69,7 +81,6 @@ public class GUI extends JFrame {
     	
     	int buttonWidth = panelWidth;    	
     	int buttonHeight = 90;
-    	
     	
     	JButton button = new JButton("Backup File");
     	button.setPreferredSize(new Dimension(buttonWidth, buttonHeight));
@@ -84,7 +95,6 @@ public class GUI extends JFrame {
 					try {
 						mainThread.startRegularBackupProtocol(filePath, 1);
 					} catch (IOException e1) {
-						// TODO Auto-generated catch block
 						e1.printStackTrace();
 					} //TODO replication degree hardcoded
 				}
@@ -118,4 +128,12 @@ public class GUI extends JFrame {
             }
         });
     }
+    
+	public GeneralInfo getGeneralInfo() {
+		return generalInfo;
+	}
+
+	public void setGeneralInfo(GeneralInfo generalInfo) {
+		this.generalInfo = generalInfo;
+	}
 }
