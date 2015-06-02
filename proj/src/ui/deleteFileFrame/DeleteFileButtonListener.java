@@ -4,25 +4,20 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 
-import javax.swing.JButton;
-import javax.swing.JScrollPane;
+import javax.swing.JFrame;
 import javax.swing.JTable;
 
 import peer.PeerNew;
 
 public class DeleteFileButtonListener implements ActionListener {
-	private BackupListPanel panel;
 	private JTable jtable;
-	private JScrollPane jscroller;
 	private PeerNew mainThread;
-	private JButton jButton;
+	private JFrame frame;
 
-	public DeleteFileButtonListener(BackupListPanel panel, JTable jtable, JScrollPane jscroller, JButton button, PeerNew mainThread){
-		this.panel = panel;
-		this.jscroller = jscroller;
+	public DeleteFileButtonListener(JFrame frame, JTable jtable, PeerNew mainThread){
 		this.jtable = jtable;
 		this.mainThread = mainThread;
-		this.jButton = button;
+		this.frame = frame;
 	}
 
 	@Override
@@ -30,7 +25,7 @@ public class DeleteFileButtonListener implements ActionListener {
 		int[] selection = jtable.getSelectedRows();
 		String[] filenames = new String[selection.length];
 		for (int i = 0; i < selection.length; i++){
-			filenames[i] = (String) jtable.getModel().getValueAt(selection[i], 2);
+			filenames[i] = (String) jtable.getModel().getValueAt(selection[i], 0);
 		}
 
 		for(int i = 0; i < filenames.length; i++) {
@@ -40,14 +35,6 @@ public class DeleteFileButtonListener implements ActionListener {
 				e1.printStackTrace();
 			}
 		}
-
-		panel.remove(jscroller);
-		panel.repaint();
-
-		//JLabel label = new JLabel(message);
-		//panel.add(label, BorderLayout.NORTH);
-		panel.validate();
-
-		this.jButton.setEnabled(false);
+		frame.dispose();
 	}
 }

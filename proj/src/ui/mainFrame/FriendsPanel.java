@@ -49,8 +49,6 @@ public class FriendsPanel extends JPanel {
 		listScroller.setPreferredSize(d);
 		this.add(listScroller, BorderLayout.NORTH);
 
-
-
 		//right click event listener
 		jTable1.addMouseListener(new MouseAdapter() {
 			@Override

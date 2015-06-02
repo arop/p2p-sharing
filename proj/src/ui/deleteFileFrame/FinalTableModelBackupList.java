@@ -9,7 +9,7 @@ public class FinalTableModelBackupList extends AbstractTableModel {
 	private static final long serialVersionUID = 1L;
 
 	private List<String> li = new ArrayList<String>();
-	private String[] columnNames = {"", "Files"};
+	private String[] columnNames = {"Files"};
 
 	public FinalTableModelBackupList(List<String> files){
 		this.li = files;
@@ -35,8 +35,6 @@ public class FinalTableModelBackupList extends AbstractTableModel {
 		String f = li.get(rowIndex);
 		switch (columnIndex) {
 		case 0: 
-			return true;
-		case 1:
 			return f;
 		}
 		return null;
@@ -46,8 +44,6 @@ public class FinalTableModelBackupList extends AbstractTableModel {
 	public Class<?> getColumnClass(int columnIndex){
 		switch (columnIndex){
 		case 0:
-			return Boolean.class;
-		case 1:
 			return String.class;
 		}
 		return null;

@@ -43,21 +43,17 @@ public class ConnectionListenerPeer extends Thread {
 					int state = 0;
 					boolean firstTime = true;
 
-
 					sslSocket = (SSLSocket)sslServerSocket.accept();
 
 					PrintWriter out = new PrintWriter(sslSocket.getOutputStream(), true); //vai responder por aqui
 					BufferedReader in = new BufferedReader(new InputStreamReader(sslSocket.getInputStream())); //lê daqui
-							
+
 					String finalString = "";
 					char nextChar;
 
-					while(true) {
-					
+					while(true) {					
 						nextChar = (char) in.read();
 						finalString += nextChar;
-
-						//System.out.println(finalString);
 
 						if(nextChar == '\r' && (state == 0 || state == 2)) {
 							state++;
@@ -75,9 +71,7 @@ public class ConnectionListenerPeer extends Thread {
 						else state = 0;
 					}
 
-
-
-					System.out.println("message received: \n	" + finalString);
+					System.out.println("message received: \n	" + Tools.getHead(finalString));
 					String origin_ip = sslSocket.getInetAddress().getHostAddress();
 					//PROCESS RECEIVED MESSAGE
 					System.out.println("	from: "+origin_ip);
@@ -143,7 +137,6 @@ public class ConnectionListenerPeer extends Thread {
 	 * @throws IOException 
 	 */
 	public String parseReceivedMessage(String message) throws IOException{
-		System.out.println("UIA MSG: " + message);
 		String[] messageHeadParts = Tools.getHead(message).split(" +");
 
 		switch(messageHeadParts[0]) {
@@ -163,16 +156,13 @@ public class ConnectionListenerPeer extends Thread {
 					return Tools.generateMessage("STORED", temp);
 				}
 			}
-			else {
-				return Tools.generateMessage("STORED", temp);
-			}
-
-			return null;
+			else return Tools.generateMessage("STORED", temp);
 
 		case "DELETE":
-			mainThread.deleteChunksOfFile(messageHeadParts[1]);
-			break;
-			
+			if(mainThread.deleteChunksOfFile(messageHeadParts[2]))
+				return Tools.generateMessage("OK");
+			else return Tools.generateMessage("NOTOK");
+
 		case "BACKUPFILE":
 			try{
 				int friend_id = Integer.parseInt(messageHeadParts[2]);
@@ -181,7 +171,7 @@ public class ConnectionListenerPeer extends Thread {
 				int port = mainThread.startFileShareReceiveThread(friend_id, bodySplit[0], Long.parseLong(bodySplit[1]));
 				return Tools.generateJsonMessage("OK", String.valueOf(port));
 			}
-			catch (ArrayIndexOutOfBoundsException e){
+			catch (ArrayIndexOutOfBoundsException e) {
 				return Tools.generateMessage("NOTOK");
 			}
 

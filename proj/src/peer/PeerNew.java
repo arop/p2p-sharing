@@ -524,7 +524,7 @@ public class PeerNew {
 		else {
 			try(BufferedReader br = new BufferedReader(new FileReader(new File("files\\lists\\backup_list.txt")))) {
 				for(String line; (line = br.readLine()) != null; ) {
-					String[] piecesOfLine = line.split(" +");
+					String[] piecesOfLine = line.split("\\?");
 					backupList.put(piecesOfLine[0],piecesOfLine[1]);
 					backupList2.put(piecesOfLine[0],Integer.parseInt(piecesOfLine[2]));
 
@@ -583,20 +583,23 @@ public class PeerNew {
 	 * @param fileId
 	 * @throws IOException
 	 */
-	public void deleteChunksOfFile(String fileId) throws IOException {
+	public boolean deleteChunksOfFile(String fileId) throws IOException {
+		boolean x = true;
 		for (Chunk chunk : chunklist) {
 			if(chunk.getFileId().equals(fileId)) {
 				String filename = fileId + "_chunk_" + chunk.getChunkNo();
 
 				File f = new File("files\\backups\\"+filename);
 				System.gc();
-				f.delete();
+				
+				x = x && f.delete();
 			}
 		}
 
 		/* reloads chunk list */
 		chunklist.clear();
 		loadChunkList();
+		return x;
 	}
 
 	/**
@@ -717,7 +720,7 @@ public class PeerNew {
 		else {
 			try(BufferedReader br = new BufferedReader(new FileReader(new File(file)))) {
 				for(String line; (line = br.readLine()) != null; ) {
-					String[] piecesOfLine = line.split(" +");
+					String[] piecesOfLine = line.split("\\?");
 
 					Chunk temp = new Chunk(piecesOfLine[0],Integer.parseInt(piecesOfLine[1]),Integer.parseInt(piecesOfLine[2]));
 					degreeListSent.put(temp,Integer.parseInt(piecesOfLine[3]));
