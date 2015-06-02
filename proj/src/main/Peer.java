@@ -152,13 +152,13 @@ public class Peer extends Thread {
 	}
 
 	public void refreshBackupList() throws IOException {
-		if(backupList.isEmpty()) {
+		/*if(backupList.isEmpty()) {
 			PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter("files\\lists\\backup_list.txt")));
 			out.close();
 		}
 		else for (Map.Entry<String, String> entry : backupList.entrySet()) {
 			//FileManagement.addToBackupListFile(entry.getKey(), entry.getValue(), backupList2.get(entry.getKey()));
-		}
+		}*/
 	}
 
 	/**

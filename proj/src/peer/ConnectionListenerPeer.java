@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
 import java.security.PrivilegedActionException;
 
@@ -46,10 +47,10 @@ public class ConnectionListenerPeer extends Thread {
 
 					String inputLine = in.readLine();
 					inputLine += in.readLine();
-					inputLine+= "\r\n\r\n";
-					inputLine += in.readLine();
+					inputLine += "\r\n\r\n";
+					inputLine += in.readLine(); //TODO mudar isto para ler ate \r\n\r\n somehow
 
-					System.out.println("message received: \n	"+inputLine);
+					System.out.println("message received: \n	" + inputLine);
 					String origin_ip = sslSocket.getInetAddress().getHostAddress();
 					//PROCESS RECEIVED MESSAGE
 					System.out.println("	from: "+origin_ip);
@@ -115,6 +116,7 @@ public class ConnectionListenerPeer extends Thread {
 	 * @throws IOException 
 	 */
 	public String parseReceivedMessage(String message) throws IOException{
+		System.out.println("UIA MSG: " + message);
 		String[] messageHeadParts = Tools.getHead(message).split(" +");
 
 		switch(messageHeadParts[0]) {
@@ -122,7 +124,7 @@ public class ConnectionListenerPeer extends Thread {
 			return Tools.generateMessage("OK");
 
 		case "PUTCHUNK":
-			Chunk temp = new Chunk(Tools.getBody(message).getBytes());
+			Chunk temp = new Chunk(Tools.getBody(message).getBytes(StandardCharsets.ISO_8859_1));
 
 			splitMessage(temp,Tools.getHead(message));
 
@@ -139,18 +141,6 @@ public class ConnectionListenerPeer extends Thread {
 			}
 
 			return null;
-			
-		case "STORED": 
-			System.out.println("Entrou aqui");
-			
-			Chunk ficticio = new Chunk(Tools.getBody(message).getBytes());
-			splitMessage(ficticio,Tools.getHead(message));
-//			mainThread.addStoredChunk(ficticio);
-			
-			//adicionou logo era novo, portanto incrementa
-			mainThread.incConfirmations(ficticio.getFileId(),ficticio.getChunkNo(),
-					mainThread.getSentMap());
-			break;
 			
 		case "BACKUPFILE":
 			try{
