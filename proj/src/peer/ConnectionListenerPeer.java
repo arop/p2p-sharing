@@ -122,6 +122,7 @@ public class ConnectionListenerPeer extends Thread {
 			return Tools.generateMessage("OK");
 
 		case "PUTCHUNK":
+			System.out.println("ESTOU NO PUTCHUNK");
 			Chunk temp = new Chunk(Tools.getBody(message).getBytes());
 
 			splitMessage(temp,Tools.getHead(message));
@@ -142,6 +143,8 @@ public class ConnectionListenerPeer extends Thread {
 			return null;
 			
 		case "STORED": 
+			System.out.println("Entrou aqui");
+			
 			Chunk ficticio = new Chunk(Tools.getBody(message).getBytes());
 			splitMessage(ficticio,Tools.getHead(message));
 //			mainThread.addStoredChunk(ficticio);
@@ -173,7 +176,7 @@ public class ConnectionListenerPeer extends Thread {
 		String[] temp = message.split(" +");
 		chunk.setFileId(temp[2]);
 		chunk.setChunkNo(Integer.parseInt(temp[3].trim()));
-		chunk.setReplicationDeg(Integer.parseInt(temp[4].trim()));
+		if(temp.length > 4) chunk.setReplicationDeg(Integer.parseInt(temp[4].trim()));
 	}
 	
 	
