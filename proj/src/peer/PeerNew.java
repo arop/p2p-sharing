@@ -57,6 +57,8 @@ public class PeerNew {
 
 	private ArrayList<Chunk> chunklist;
 	private ArrayList<Chunk> chunksReceived;
+	
+	ConnectionListenerPeer con_listener;
 	private Map<String,ArrayList<Integer>> chunksUserID;
 
 	public PeerNew() throws IOException {		
@@ -148,7 +150,7 @@ public class PeerNew {
 		gui.setVisible(true);
 
 		//connection listener -> thread always reading in user's port.
-		ConnectionListenerPeer con_listener = new ConnectionListenerPeer(this);
+		con_listener = new ConnectionListenerPeer(this);
 		con_listener.start();
 	}
 
@@ -239,8 +241,31 @@ public class PeerNew {
 
 				User temp = onlineUsers.get(index);
 				System.out.println("sending message");
-				this.sendMessage(msg, temp.getIp(), temp.getPort(), 0);
+				String answer = this.sendMessage(msg, temp.getIp(), temp.getPort(), 0);
+								
+				addToMap("send",chunk);
+				
+				System.out.println("Answer:" + answer);
+				
+				String[] messageHeadParts = Tools.getHead(answer).split(" +");
+
+				if(messageHeadParts[0].equals("STORED")) {
+					System.out.println("TOU AQUI NO STORED YAY!");
+										
+					Chunk ficticio = new Chunk(Tools.getBody(answer).getBytes());
+					con_listener.splitMessage(ficticio,Tools.getHead(answer));
+					
+					System.out.println(ficticio.getFileId());
+					System.out.println(ficticio.getChunkNo());
+					System.out.println(ficticio.getReplicationDeg());
+					System.out.println(ficticio.getByteArray().length);
+					
+					incConfirmations(ficticio.getFileId(),ficticio.getChunkNo(),degreeListSent);
+				}
+
 				tempRepDegree--;
+
+
 			}
 
 			String[] filenameArray = filePath.split("\\\\");
@@ -699,9 +724,7 @@ public class PeerNew {
 
 	public void clearChunkList() {
 		chunklist.clear();
-}
-
-	/* ============== OBRAS ============== */
+		/* ============== OBRAS ============== */
 
 	public void readDegreeList(String file) throws IOException {
 		if(!FileManagement.fileExists(file))
@@ -725,7 +748,7 @@ public class PeerNew {
 			System.err.println("invalid map type");
 		}
 
-		FileManagement.saveMapToFile(degreeListSent, "files\\lists\\degreeListSent.txt");
+		//FileManagement.saveMapToFile(degreeListSent, "files\\lists\\degreeListSent.txt");
 
 	}
 
@@ -736,8 +759,8 @@ public class PeerNew {
 				it.remove();
 			}
 		}
-
 		FileManagement.saveMapToFile(degreeListSent, "files\\lists\\degreeListSent.txt");
+		//FileManagement.saveMapToFile(degreeListSent, "files\\lists\\degreeListSent.txt");
 
 	}
 
@@ -746,14 +769,17 @@ public class PeerNew {
 	}
 
 	public void incConfirmations(String fileId2, int chunkNo2, Map<Chunk,Integer> m) throws IOException {
+
+		
 		for (Map.Entry<Chunk, Integer> entry : m.entrySet()) {
 			if(entry.getKey().getFileId().equals(fileId2) && entry.getKey().getChunkNo() == chunkNo2) {
-				m.put(entry.getKey(),entry.getValue() + 1);
+				m.put(entry.getKey(),entry.getValue()+1);
 			}
 		}
 
 		FileManagement.saveMapToFile(degreeListSent, "files\\lists\\degreeListSent.txt");
 
+		FileManagement.saveMapToFile(m, "files\\lists\\degreeListSent.txt");
 	}
 
 }

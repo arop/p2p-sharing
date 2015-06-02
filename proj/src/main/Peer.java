@@ -273,7 +273,7 @@ public class Peer extends Thread {
 			snd_MC.sendMessage(Tools.generateMessage("REMOVED", chunk),MC_IP,MC_Port);
 		}
 
-		FileManagement.saveMapToFile(degMonitor.getStoredMap(),"files\\lists\\degreeListStored.txt");
+		//FileManagement.saveMapToFile(degMonitor.getStoredMap(),"files\\lists\\degreeListStored.txt");
 
 		/* reloads chunk list */
 		chunklist.clear();

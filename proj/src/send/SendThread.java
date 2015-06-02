@@ -61,7 +61,7 @@ public class SendThread extends Thread {
 							int i = 1;
 							do {								
 								sendMessage(Tools.generateMessage("PUTCHUNK", chunk), main.getMDB_IP(), main.getMDB_Port());
-								FileManagement.saveMapToFile(main.getDegMonitor().getSentMap(), "files\\lists\\degreeListSent.txt");
+								//FileManagement.saveMapToFile(main.getDegMonitor().getSentMap(), "files\\lists\\degreeListSent.txt");
 								Thread.sleep(1000);
 								i++;
 							} while (isWaitingForConfirmation(chunk.getFileId(), chunk.getChunkNo(),chunk.getReplicationDeg(),i) && i < 6);
