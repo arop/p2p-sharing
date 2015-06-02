@@ -57,7 +57,7 @@ public class PeerNew {
 
 	private ArrayList<Chunk> chunklist;
 	private ArrayList<Chunk> chunksReceived;
-	
+
 	ConnectionListenerPeer con_listener;
 	private Map<String,ArrayList<Integer>> chunksUserID;
 
@@ -74,7 +74,7 @@ public class PeerNew {
 
 		if(degreeListSent.isEmpty()) {
 			readDegreeList("files\\lists\\degreeListSent.txt");
-	}
+		}
 	}
 
 	private LoginFrame loginFrame;
@@ -207,7 +207,7 @@ public class PeerNew {
 
 		//2 -> get online users IPs and ports from server
 		ArrayList<User> onlineUsers = this.getOnlineUsersFromServer();
-		
+
 		if (onlineUsers == null)
 			System.out.println("Null online users");
 		else {
@@ -231,9 +231,10 @@ public class PeerNew {
 			int tempRepDegree = repDegree;
 			Random r = new Random();
 
+			addToMap("send",chunk);
 			while(tempRepDegree > 0) {
 				int index = r.nextInt(onlineUsers.size());
-				
+
 				while(usedIndexes.contains(index))
 					index = r.nextInt(onlineUsers.size());
 
@@ -242,26 +243,18 @@ public class PeerNew {
 				User temp = onlineUsers.get(index);
 				System.out.println("sending message");
 				String answer = this.sendMessage(msg, temp.getIp(), temp.getPort(), 0);
-								
-				addToMap("send",chunk);
-				
-				System.out.println("Answer:" + answer);
-				
-				
-				if(answer == null) return;
-				
-				String[] messageHeadParts = Tools.getHead(answer).split(" +");
 
-				if(messageHeadParts[0].equals("STORED")) {
-										
+				System.out.println("Answer: " + answer);
+
+				if(answer == null) System.err.println("NULL");
+
+				if(Tools.getType(answer).equals("STORED")) {
 					Chunk ficticio = new Chunk(Tools.getBody(answer).getBytes());
 					con_listener.splitMessage(ficticio,Tools.getHead(answer));
 					incConfirmations(ficticio.getFileId(),ficticio.getChunkNo(),degreeListSent);
 				}
 
 				tempRepDegree--;
-
-
 			}
 
 			String[] filenameArray = filePath.split("\\\\");
@@ -274,11 +267,8 @@ public class PeerNew {
 			}
 
 			refreshBackupList();
-
-			for (Chunk chunk2 : chunks) {
-				addToMap("send", chunk2);
-		}	
-	}
+			FileManagement.saveMapToFile(degreeListSent, "files\\lists\\degreeListSent.txt");
+		}
 	}
 
 	private void addUserToBackupFile(String filename, User user) {
@@ -291,27 +281,26 @@ public class PeerNew {
 		}
 	}
 
-	
 	public boolean shareFileWithFriend(int friend_id){
-		
+
 		User friend;
 		if ( (friend= this.getUserFromServer(friend_id)) == null)
 			return false;
-		
+
 		String filePath = Tools.selectFileFrame();
 		File f = new File(filePath);
-		
+
 		String answer = sendMessage(Tools.generateJsonMessage("BACKUPFILE", this.localUser.getId(), f.getName()+"#"+f.length()), 
 				friend.getIp(), friend.getPort(), 0);
-		
+
 		if (answer == null)
 			return false;
-		
+
 		if (!Tools.getType(answer).equals("OK")) 
 			return false;
-				
+
 		int friendPortForShare = Integer.parseInt(Tools.getBody(answer));
-		
+
 		//create thread to send file
 		FileShareThreadSend t;
 		try {
@@ -320,12 +309,12 @@ public class PeerNew {
 			System.out.println(e.getMessage());
 			return false;
 		}
-		
+
 		t.start();	
-		
+
 		return true;
 	}
-	
+
 	/**
 	 * Starts thread where peer will receive file shared by friend.
 	 * @param friend_id
@@ -335,7 +324,7 @@ public class PeerNew {
 	 */
 	public int startFileShareReceiveThread(int friend_id, String fileName, long fileSize){
 		int port = -1;
-		
+
 		try {
 			FileShareThreadReceive t = new FileShareThreadReceive(friend_id, fileName, fileSize, this);
 			t.start();
@@ -352,25 +341,24 @@ public class PeerNew {
 			System.out.println("Exception message: "+e.getMessage());
 			e.printStackTrace();
 		}
-		
+
 		return port;
 	}
-	
+
 	public User getUserFromServer(int user_id){
 		User u = null;
 		String answer = sendMessage(Tools.generateJsonMessage("GETUSER", String.valueOf(user_id)), this.serverAddress, this.serverPort, 0);
 		if (answer == null)
 			return null;
-		
+
 		if (!Tools.getType(answer).equals("USER"))
 			return null;
-		
+
 		Gson gson = new Gson();
 		u = (User) gson.fromJson(Tools.getBody(answer), User.class);
 		return u;
 	}
-	
-	
+
 	/**
 	 * @param msg
 	 * @param ip_dest
@@ -378,7 +366,7 @@ public class PeerNew {
 	 * @return response from other peer/server
 	 */
 	public String sendMessage(String msg, String ip_dest, int port_dest, int connection_try_number){
-		System.out.println("Sending message: "+Tools.getHead(msg));
+		System.out.println("Sending message: " + Tools.getHead(msg));
 		{
 			// Registering the JSSE provider
 			Security.addProvider(new Provider());
@@ -408,7 +396,7 @@ public class PeerNew {
 			//GET RESPONSE 
 			response = in.readLine();
 			response += in.readLine(); 				//(isto está assim hardcoded pq o 
-			response += "\r\n\r\n"+in.readLine(); 	//readLine lê até ao \r\n apenas)
+			response += "\r\n\r\n" + in.readLine(); 	//readLine lê até ao \r\n apenas)
 
 			//PARSE RESPONSE
 			//String origin_ip = sslSocket.getInetAddress().getHostAddress();
@@ -451,36 +439,35 @@ public class PeerNew {
 			return null;
 		}
 	}
-	
-	
+
 	public SSLServerSocket getServerSocket(int socket_port) {
-	    try {
-	    	
-	        /* Create keystore */
-	        KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-	        keyStore.load(new FileInputStream("..\\certificates\\server\\keystore"), "peerkey".toCharArray());
+		try {
 
-	        
-	        KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-	    	kmf.init(keyStore, "peerkey".toCharArray()); // That's the key's password, if different.
-	        
-	        
-	        /* Get factory for the given keystore */
-	        TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-	        tmf.init(keyStore);
-	        
-	        SSLContext ctx = SSLContext.getInstance("SSL");
-	        //ctx.init(null, tmf.getTrustManagers(), null);
-	        ctx.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
-	        
-	        SSLServerSocketFactory factory = ctx.getServerSocketFactory();
+			/* Create keystore */
+			KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+			keyStore.load(new FileInputStream("..\\certificates\\server\\keystore"), "peerkey".toCharArray());
 
-	        return (SSLServerSocket) factory.createServerSocket(socket_port);
-	    } catch (Exception e) {
-	       System.out.println("Problem creating SSL Server Socket: "+ e.getMessage()+"\n"+e.getCause());
-	       return null;
-	    }
-	    
+
+			KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+			kmf.init(keyStore, "peerkey".toCharArray()); // That's the key's password, if different.
+
+
+			/* Get factory for the given keystore */
+			TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+			tmf.init(keyStore);
+
+			SSLContext ctx = SSLContext.getInstance("SSL");
+			//ctx.init(null, tmf.getTrustManagers(), null);
+			ctx.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
+
+			SSLServerSocketFactory factory = ctx.getServerSocketFactory();
+
+			return (SSLServerSocket) factory.createServerSocket(socket_port);
+		} catch (Exception e) {
+			System.out.println("Problem creating SSL Server Socket: "+ e.getMessage()+"\n"+e.getCause());
+			return null;
+		}
+
 	}
 
 	/**
@@ -504,7 +491,7 @@ public class PeerNew {
 		File dir4 = new File("files\\backups");
 		if(!dir4.exists())
 			dir4.mkdir();
-		
+
 		File dir5 = new File("files\\shared-with-me");
 		if(!dir5.exists())
 			dir5.mkdir();
@@ -702,6 +689,7 @@ public class PeerNew {
 		}
 		return null;
 	}
+
 	public Integer getFileNumberChunks(String string) {
 		return this.backupList2.get(string);
 	}
@@ -721,7 +709,7 @@ public class PeerNew {
 	public void clearChunkList() {
 		chunklist.clear();
 	}
-		/* ============== OBRAS ============== */
+	/* ============== OBRAS ============== */
 
 	public void readDegreeList(String file) throws IOException {
 		if(!FileManagement.fileExists(file))
@@ -765,15 +753,11 @@ public class PeerNew {
 	}
 
 	public void incConfirmations(String fileId2, int chunkNo2, Map<Chunk,Integer> m) throws IOException {
-
-		
 		for (Map.Entry<Chunk, Integer> entry : m.entrySet()) {
 			if(entry.getKey().getFileId().equals(fileId2) && entry.getKey().getChunkNo() == chunkNo2) {
 				m.put(entry.getKey(),entry.getValue()+1);
 			}
 		}
-
-		FileManagement.saveMapToFile(m, "files\\lists\\degreeListSent.txt");
 	}
 
 }
