@@ -48,12 +48,7 @@ public class ConnectionListenerPeer extends Thread {
 
 					PrintWriter out = new PrintWriter(sslSocket.getOutputStream(), true); //vai responder por aqui
 					BufferedReader in = new BufferedReader(new InputStreamReader(sslSocket.getInputStream())); //lê daqui
-					BufferedReader in2 = new BufferedReader(new InputStreamReader(sslSocket.getInputStream())); //lê daqui
-					/* O jon skeet disse que era na boa ter 2 
-					 *  http://stackoverflow.com/questions/262618/java-bufferedreader-back-to-the-top-of-a-text-file */ 
-					
-	
-			
+							
 					String finalString = "";
 					char nextChar;
 
