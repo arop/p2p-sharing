@@ -40,21 +40,53 @@ public class ConnectionListenerPeer extends Thread {
 					System.out.println("Failed to open socket! Port: " + mainThread.getLocalUser().getPort());
 				}
 				else {
+					int state = 0;
+					boolean firstTime = true;
+
+
 					sslSocket = (SSLSocket)sslServerSocket.accept();
 
 					PrintWriter out = new PrintWriter(sslSocket.getOutputStream(), true); //vai responder por aqui
 					BufferedReader in = new BufferedReader(new InputStreamReader(sslSocket.getInputStream())); //lê daqui
+					BufferedReader in2 = new BufferedReader(new InputStreamReader(sslSocket.getInputStream())); //lê daqui
+					/* O jon skeet disse que era na boa ter 2 
+					 *  http://stackoverflow.com/questions/262618/java-bufferedreader-back-to-the-top-of-a-text-file */ 
+					
+	
+			
+					String finalString = "";
+					char nextChar;
 
-					String inputLine = in.readLine();
-					inputLine += in.readLine();
-					inputLine += "\r\n\r\n";
-					inputLine += in.readLine(); //TODO mudar isto para ler ate \r\n\r\n somehow
+					while(true) {
 
-					System.out.println("message received: \n	" + inputLine);
+						nextChar = (char) in.read();
+						finalString += nextChar;
+
+						//System.out.println(finalString);
+
+						if(nextChar == '\r' && (state == 0 || state == 2)) {
+							state++;
+						}
+						else if(nextChar == '\n' && state == 1) {
+							state++;
+						}
+						else if(nextChar == '\n' && state == 3) {
+							if(finalString.contains("PUTCHUNK") && firstTime) {
+								firstTime = false;
+								state = 0;
+							}
+							else break;
+						}
+						else state = 0;
+					}
+
+
+
+					System.out.println("message received: \n	" + finalString);
 					String origin_ip = sslSocket.getInetAddress().getHostAddress();
 					//PROCESS RECEIVED MESSAGE
 					System.out.println("	from: "+origin_ip);
-					String responseMessage = this.parseReceivedMessage(inputLine);
+					String responseMessage = this.parseReceivedMessage(finalString);
 					//SEND RESPONSE
 					out.println(responseMessage);
 					System.out.println("Answer sent!");
@@ -141,19 +173,19 @@ public class ConnectionListenerPeer extends Thread {
 			}
 
 			return null;
-			
+
 		case "BACKUPFILE":
 			try{
 				int friend_id = Integer.parseInt(messageHeadParts[2]);
 				String[] bodySplit = Tools.getBody(message).split("#");
-				
+
 				int port = mainThread.startFileShareReceiveThread(friend_id, bodySplit[0], Long.parseLong(bodySplit[1]));
 				return Tools.generateJsonMessage("OK", String.valueOf(port));
 			}
 			catch (ArrayIndexOutOfBoundsException e){
 				return Tools.generateMessage("NOTOK");
 			}
-			
+
 		default:
 			break;				
 		}
@@ -166,6 +198,6 @@ public class ConnectionListenerPeer extends Thread {
 		chunk.setChunkNo(Integer.parseInt(temp[3].trim()));
 		if(temp.length > 4) chunk.setReplicationDeg(Integer.parseInt(temp[4].trim()));
 	}
-	
-	
+
+
 }

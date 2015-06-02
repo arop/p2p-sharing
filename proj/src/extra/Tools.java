@@ -52,14 +52,14 @@ public abstract class Tools {
 		switch(type) {
 		case "PUTCHUNK":
 			message = "PUTCHUNK " + Tools.getVersion() + " " + chunk.getFileId() +  " "  + chunk.getChunkNo() + " " + chunk.getReplicationDeg() 
-			+ "\r\n\r\n" + (new String(chunk.getByteArray(),StandardCharsets.ISO_8859_1));
+			+ "\r\n\r\n" + (new String(chunk.getByteArray(),StandardCharsets.ISO_8859_1)) + "\r\n\r\n";
 			break;
 		case "STORED":
 			message = "STORED " +  Tools.getVersion() + " " +  chunk.getFileId() +  " "  + chunk.getChunkNo() + "\r\n\r\n"; 
 			break;	
 		case "CHUNK": 
 			message =  "CHUNK "  + Tools.getVersion() + " " +  chunk.getFileId() +  " "  + chunk.getChunkNo() + "\r\n\r\n" +
-					(new String(chunk.getByteArray(),StandardCharsets.ISO_8859_1)); 
+					(new String(chunk.getByteArray(),StandardCharsets.ISO_8859_1))+ "\r\n\r\n"; 
 			break;		
 		case "REMOVED":
 			message = "REMOVED " +  Tools.getVersion() + " " +  chunk.getFileId() +  " "  + chunk.getChunkNo() + "\r\n\r\n"; 
