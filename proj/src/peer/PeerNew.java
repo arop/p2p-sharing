@@ -782,4 +782,8 @@ public class PeerNew {
 	public ArrayList<String> getBackedUpFiles() {
 		return new ArrayList<String>(backupList.keySet());
 	}
+
+	public void startRestoreChunks(String string) {
+		
+	}
 }
