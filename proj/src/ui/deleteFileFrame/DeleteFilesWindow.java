@@ -14,7 +14,7 @@ public class DeleteFilesWindow extends JFrame {
 	public DeleteFilesWindow(PeerNew mainThread) {
 		super();
 
-		setTitle("Delete Files");
+		setTitle("Delete File");
 		this.setMinimumSize(new Dimension(300,500));
 		setLocationRelativeTo(null);
 		setResizable(false);
@@ -23,13 +23,8 @@ public class DeleteFilesWindow extends JFrame {
 
 		if (myList.isEmpty())
 			System.out.println("lista é nula");
-		else{
-			for(Object u : myList){
-				System.out.println(u);
-			}
-		}
 
-		this.add(new BackupListPanel(myList,mainThread));
+		this.add(new BackupListPanel(myList,this,mainThread));
 
 		this.pack();
 		this.setVisible(true);

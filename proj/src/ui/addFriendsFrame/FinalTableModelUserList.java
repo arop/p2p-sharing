@@ -18,7 +18,6 @@ public class FinalTableModelUserList extends AbstractTableModel {
 
     public FinalTableModelUserList(List<User> list){
          this.li = list;
-  
     }
 
     @Override

@@ -134,9 +134,9 @@ public abstract class FileManagement {
 	public static void addToBackupListFile(String string, String fId,int numberOfChunks, ArrayList<Integer> usersID) {
 		try {
 			PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter("files\\lists\\backup_list.txt")));
-			out.print(string + " " +  fId + " " + numberOfChunks);
+			out.print(string + "?" +  fId + "?" + numberOfChunks);
 			for(Integer id: usersID)
-				out.print(" " + id);
+				out.print("?" + id);
 			out.println();
 			out.close();
 		} catch (IOException e) {
@@ -191,7 +191,7 @@ public abstract class FileManagement {
 		PrintWriter f0 = new PrintWriter(new FileWriter(file));
 
 		for (Map.Entry<Chunk, Integer> entry : m.entrySet()) {
-			f0.println(entry.getKey().getFileId() + " " + entry.getKey().getChunkNo() + " " + entry.getKey().getReplicationDeg() + " " + entry.getValue());
+			f0.println(entry.getKey().getFileId() + "?" + entry.getKey().getChunkNo() + "?" + entry.getKey().getReplicationDeg() + "?" + entry.getValue());
 		}
 		f0.close();
 	}
