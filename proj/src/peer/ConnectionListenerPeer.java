@@ -122,7 +122,6 @@ public class ConnectionListenerPeer extends Thread {
 			return Tools.generateMessage("OK");
 
 		case "PUTCHUNK":
-			System.out.println("ESTOU NO PUTCHUNK");
 			Chunk temp = new Chunk(Tools.getBody(message).getBytes());
 
 			splitMessage(temp,Tools.getHead(message));
@@ -132,7 +131,6 @@ public class ConnectionListenerPeer extends Thread {
 					FileManagement.materializeChunk(temp);
 					mainThread.clearChunkList();
 					mainThread.loadChunkList();
-		//			mainThread.addToMap("stored",temp);
 					return Tools.generateMessage("STORED", temp);
 				}
 			}
