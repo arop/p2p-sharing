@@ -62,7 +62,7 @@ public class ConnectionListenerPeer extends Thread {
 							state++;
 						}
 						else if(nextChar == '\n' && state == 3) {
-							if(finalString.contains("PUTCHUNK") && firstTime) {
+							if((finalString.contains("PUTCHUNK") || finalString.contains("CHUNK")) && firstTime) {
 								firstTime = false;
 								state = 0;
 							}

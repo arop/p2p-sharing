@@ -21,30 +21,28 @@ import extra.Tools;
 public class ConnectionListenerServer extends Thread{
 	private int port; // Port where the SSL Server needs to listen for new requests from the client
 	private Server mainThread;
+	private CheckOnlineThread checkOnlineThread;
 
-	public ConnectionListenerServer(int port, Server server){
+	public ConnectionListenerServer(int port, Server server, CheckOnlineThread cot){
 		this.port = port;
 		this.mainThread = server;
+		this.checkOnlineThread = cot;
 	}
 
 	@Override
 	public void run() {
-
 		SSLServerSocket sslServerSocket = null;
 		SSLSocket sslSocket = null ;
 
 		while(true){
 			try {
-				
 				sslServerSocket = mainThread.getServerSocket(this.port);
 				if (sslServerSocket == null){
 					System.out.println("Failed to create socket. Port: "+this.port);
-					//System.exit(0);
 				}
 				else{
 					sslSocket = (SSLSocket)sslServerSocket.accept();
-					
-					
+
 					// Create Input / Output Streams for communication with the client
 					PrintWriter out = new PrintWriter(sslSocket.getOutputStream(), true); //vai responder por aqui
 					BufferedReader in = new BufferedReader(new InputStreamReader(sslSocket.getInputStream())); //lê daqui
@@ -59,7 +57,7 @@ public class ConnectionListenerServer extends Thread{
 					//PROCESS RECEIVED MESSAGE
 					System.out.println("	from: "+origin_ip);
 					String responseMessage = this.parseReceivedMessage(inputLine, origin_ip);
-					
+
 					//SEND RESPONSE
 					out.println(responseMessage);
 					//System.out.println("Answer sent!");
@@ -69,8 +67,6 @@ public class ConnectionListenerServer extends Thread{
 					//sslSocket.close();
 					sslServerSocket.close();	
 				}
-				
-
 			}
 			catch(Exception exp)
 			{
@@ -80,7 +76,6 @@ public class ConnectionListenerServer extends Thread{
 				exp.printStackTrace();
 
 				try {
-					//sslSocket.close();
 					sslServerSocket.close();
 				} catch (IOException e) {
 					System.out.println("erro no while read server");
@@ -88,8 +83,6 @@ public class ConnectionListenerServer extends Thread{
 			}
 		}
 	}
-	
-	
 
 	/**
 	 * parses received message, executes action, and generates response.
@@ -102,7 +95,7 @@ public class ConnectionListenerServer extends Thread{
 		int user_id;
 		Gson gson = new Gson();
 		Type arrayListOfUsers = new TypeToken<ArrayList<User>>(){}.getType();
-		
+
 		switch(messageHeadParts[0]) {
 		case "GETALLUSERS":
 			//GETALLUSERS <Version> <CRLF><CRLF>
@@ -128,27 +121,26 @@ public class ConnectionListenerServer extends Thread{
 			String json_data = gson.toJson(userList, arrayListOfUsers);
 
 			return Tools.generateJsonMessage("FRIENDS", json_data);
-		
+
 		case "GETONLINEUSERS": 
 			//ADDFRIENDS <Version> <User id> <CRLF><CRLF> JSON of int[] users ids
-			ArrayList<User> userList1 = this.mainThread.getOnlineUsers();
+			ArrayList<User> userList1 = checkOnlineThread.getOnlineUsers();
 			return Tools.generateJsonMessage("ONLINEUSERS", gson.toJson(userList1, arrayListOfUsers));
 
 		case "LOGIN":
 			String[] loginparts = Tools.getBody(message).split(" ");
-			
+
 			System.out.println("Username: " + loginparts[0]);
 			System.out.println("Password: " + loginparts[1]);
-			
+
 			User user = null;
 			if( (user = mainThread.login(loginparts[0],loginparts[1])) != null){
 				mainThread.updateUserAddress(user.getId(), sourceAddress);
 				return Tools.generateJsonMessage("OK",gson.toJson(user));
 			}
-				
+
 			return Tools.generateMessage("NOTOK");
-		
-			
+
 		case "REGISTER":
 			String[] registerParts = Tools.getBody(message).split(" ");
 
@@ -157,7 +149,6 @@ public class ConnectionListenerServer extends Thread{
 			System.out.println("Password: " + registerParts[2]);
 			System.out.println("Port: " + registerParts[3]);
 
-			
 			int temp = Integer.parseInt(registerParts[3]);
 
 			if(mainThread.registerUser(registerParts[0],registerParts[1],registerParts[2],sourceAddress,temp))
@@ -168,7 +159,7 @@ public class ConnectionListenerServer extends Thread{
 			User u = mainThread.user_db.getUserById(Integer.parseInt(Tools.getBody(message)));
 			String userJson = gson.toJson(u);
 			return Tools.generateJsonMessage("USER", userJson);
-			
+
 		default:
 			break;				
 		}
