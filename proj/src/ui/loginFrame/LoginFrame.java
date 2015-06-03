@@ -1,5 +1,6 @@
 package ui.loginFrame;
 
+import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.GridLayout;
@@ -11,6 +12,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
+import javax.swing.JSpinner;
 import javax.swing.JTextArea;
 
 import peer.PeerNew;
@@ -21,7 +23,7 @@ public class LoginFrame extends JFrame {
 
 	private static final long serialVersionUID = 1L;
 
-	private boolean success = false;
+	private String stateF = "running";
 	private PeerNew mainThread;
 	private RegisterFrame registerForm;
 
@@ -49,13 +51,18 @@ public class LoginFrame extends JFrame {
 
 		JButton registerButton = new JButton("No account? Join us now!");
 
-
+		JButton loginFacebookButton = new JButton("Login with Facebook");
+		JSpinner portFacebook = new JSpinner();
+		portFacebook.setPreferredSize(new Dimension(60,25));
+		portFacebook.setValue(5599);
+		
+		
 		loginButton.addActionListener(new ActionListener()
 		{
 			@Override	
 			public void actionPerformed(ActionEvent e){
 				if(mainThread.login(username.getText(),new String(password.getPassword()))) {
-					setSuccess(true); 
+					setState("success"); 
 				}
 			}
 		});
@@ -68,12 +75,30 @@ public class LoginFrame extends JFrame {
 				registerForm.setVisible(true);
 			}
 		});
+		
+		loginFacebookButton.addActionListener(new ActionListener()
+		{
+			@Override	
+			public void actionPerformed(ActionEvent e){
+				/*Runnable run = new Runnable() {
+
+					@Override
+					public void run() {
+						if(mainThread.loginFacebook((Integer) portFacebook.getValue())) {
+							setSuccess(true); 
+						}
+					};
+				};
+				run.run();*/
+				setState("facebook-"+portFacebook.getValue()); 
+			}
+		});
 
 
 
 		JPanel loginForm = new JPanel();
 
-		GridLayout grid = new GridLayout(6,1);
+		GridLayout grid = new GridLayout(7,1);
 
 		loginForm.setLayout(grid);		
 
@@ -83,6 +108,12 @@ public class LoginFrame extends JFrame {
 		loginForm.add(password);
 		loginForm.add(loginButton);
 		loginForm.add(registerButton);
+		
+		JPanel panelFacebook = new JPanel();
+		panelFacebook.add(loginFacebookButton, BorderLayout.WEST);
+		panelFacebook.add(portFacebook, BorderLayout.EAST);
+		
+		loginForm.add(panelFacebook);
 
 
 		this.add(loginForm);
@@ -90,12 +121,12 @@ public class LoginFrame extends JFrame {
 		this.pack();
 	}
 
-	public synchronized void setSuccess(boolean b){
-		success = b;
+	public synchronized void setState(String b){
+		stateF = b;
 	}
 
-	public synchronized boolean isSuccess() {
-		return success;
+	public synchronized String getState1() {
+		return this.stateF;
 	}
 
 	public static void main(String[] args) {

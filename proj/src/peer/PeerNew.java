@@ -10,10 +10,14 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
+import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.Security;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -28,14 +32,22 @@ import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509TrustManager;
+import javax.swing.SwingUtilities;
 
 import main.Chunk;
 import ui.loginFrame.LoginFrame;
 import ui.mainFrame.GUI;
+import user.FacebookTest;
 import user.User;
+import chrriis.dj.nativeswing.swtimpl.NativeInterface;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 import com.sun.net.ssl.internal.ssl.Provider;
 
@@ -135,18 +147,44 @@ public class PeerNew {
 	}
 
 	public void startPeer(){
-		loginFrame = new LoginFrame(this);
-		while(!loginFrame.isSuccess()) {	
-			//System.out.println(loginFrame.isSuccess());
+		
+		while(true){
+			loginFrame = new LoginFrame(this);
+			
+			String loginState;
+			while( (loginState = loginFrame.getState1()).equals("running")) {	
+				//System.out.println(loginFrame.isSuccess());
+			}
+			loginFrame.dispose();
+			
+			if (!loginState.equals("success")){
+				
+				if (this.loginFacebook(Integer.parseInt(loginState.split("-")[1]))){
+					break;
+				}
+			}
+			else break;
 		}
-		loginFrame.dispose();
+		
 
 		this.friends = new ArrayList<User>();//initialize list
 
 		this.getFriendsFromServer(); //update list with values from server
-
-		GUI gui = new GUI(this);
-		gui.setVisible(true);
+		PeerNew thisThread = this;
+		
+		NativeInterface.open(); // not sure what else may be needed for this
+		try {
+			SwingUtilities.invokeAndWait(new Runnable() {
+			      public void run() {
+			    	  GUI gui = new GUI(thisThread);
+			  			gui.setVisible(true);
+			      }
+			    });
+		} catch (InvocationTargetException | InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 
 		//connection listener -> thread always reading in user's port.
 		con_listener = new ConnectionListenerPeer(this);
@@ -177,6 +215,37 @@ public class PeerNew {
 		return true;
 	}
 
+	public boolean loginFacebook(int port) {
+		System.out.println("1");
+		FacebookTest fb = new FacebookTest();
+		String json = fb.getJsonUser();
+		JsonElement jelement = new JsonParser().parse(json);
+		System.out.println("2");
+		JsonObject  jobject = jelement.getAsJsonObject();
+		
+		String id = jobject.get("id").toString();
+		id = id.substring(1, id.length()-1); // removes double quotes 
+		
+		System.out.println("3");
+		
+		String name = jobject.get("name").toString();
+		name = name.substring(1, name.length()-1); // removes double quotes 
+		
+		System.out.println("4");
+		String messagebody = id + "#" + name + "#" + port;
+		String response = this.sendMessage(Tools.generateJsonMessage("LOGINFACEBOOK",messagebody), serverAddress, serverPort,0);
+		System.out.println("5");
+		if(!Tools.getType(response).equals("OK"))
+			return false;
+		System.out.println("6");
+		Gson g = new Gson();
+		User u = g.fromJson(Tools.getBody(response), User.class);
+		setLocalUser(u);
+		System.out.println("7");
+		return true;
+	}
+	
+	
 	public boolean register(String username, String email, String password1, String password2, int desiredPort) {
 		if(password1.equals(password2)) {
 			String messagebody = username + " " + email + " " + password1 + " " + desiredPort;
