@@ -123,7 +123,7 @@ public abstract class FileManagement {
 		out.flush();
 		out.close();
 	}
-	
+
 	/**
 	 * Add file to the backup list
 	 * @param string
@@ -180,7 +180,7 @@ public abstract class FileManagement {
 			exception.printStackTrace();
 		}
 	}
-	
+
 	/**
 	 * Saves map data to a file
 	 * @param m
@@ -191,11 +191,14 @@ public abstract class FileManagement {
 		PrintWriter f0 = new PrintWriter(new FileWriter(file));
 
 		for (Map.Entry<Chunk, Integer> entry : m.entrySet()) {
-			f0.println(entry.getKey().getFileId() + "?" + entry.getKey().getChunkNo() + "?" + entry.getKey().getReplicationDeg() + "?" + entry.getValue());
+			String s = entry.getKey().getFileId() + "?" + entry.getKey().getChunkNo() + "?" + entry.getKey().getReplicationDeg() + "?" + entry.getValue();
+			for(Integer i: entry.getKey().getUserIds())
+				s += "?"+i;
+			f0.println(s);
 		}
 		f0.close();
 	}
-	
+
 	/** 
 	 * Print hash in hexadecimal, code copied from:
 	 * 

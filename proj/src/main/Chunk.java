@@ -1,5 +1,7 @@
 package main;
 
+import java.util.ArrayList;
+
 /**
  * Class represents a chunk
  * @author André Pires, Filipe Gama
@@ -10,17 +12,11 @@ public class Chunk {
 	private String fileId;
 	private String fileName;
 	private int chunkNo, replicationDeg = 1;
+	private ArrayList<Integer> userIDs;
 
 	public Chunk(byte[] c) {
 		chunk = c.clone();
-	}
-
-	public String getFileName() {
-		return fileName;
-	}
-
-	public void setFileName(String fileName) {
-		this.fileName = fileName;
+		userIDs = new ArrayList<Integer>();
 	}
 
 	public Chunk(byte[] c, int number, int degree, String fileId) {
@@ -28,12 +24,14 @@ public class Chunk {
 		chunkNo = number;
 		replicationDeg = degree;
 		this.fileId = fileId;
+		userIDs = new ArrayList<Integer>();
 	}
-	
+
 	public Chunk(String fileId, int number, int degree) {
 		chunkNo = number;
 		replicationDeg = degree;
 		this.fileId = fileId;
+		userIDs = new ArrayList<Integer>();
 	}
 
 	public byte[] getByteArray() {
@@ -94,5 +92,21 @@ public class Chunk {
 
 	public void setReplicationDeg(int replicationDeg) {
 		this.replicationDeg = replicationDeg;
+	}
+
+	public String getFileName() {
+		return fileName;
+	}
+
+	public void setFileName(String fileName) {
+		this.fileName = fileName;
+	}
+
+	public void addUserID(int id) {
+		userIDs.add(id);
+	}
+
+	public ArrayList<Integer> getUserIds() {
+		return userIDs;
 	}
 }
