@@ -189,7 +189,7 @@ public class ConnectionListenerServer extends Thread{
 		ArrayList<String> msgs = pendingMessages.get(user.getId());
 
 		if(msgs != null)
-			new SendPendingMsg(msgs,user,mainThread).start();	
+			new SendPendingMsg(msgs,user,mainThread,this).start();	
 	}
 
 	private void saveNotRespondMessage(String string) {
@@ -245,5 +245,10 @@ public class ConnectionListenerServer extends Thread{
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	public void removePendingMsg(User u, ArrayList<String> msg) {
+		pendingMessages.put(u.getId(),msg);
+		refreshNotRespondMapFile();
 	}
 }
