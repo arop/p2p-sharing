@@ -59,13 +59,13 @@ public class PeerNew {
 	private ArrayList<Chunk> chunksReceived;
 
 	ConnectionListenerPeer con_listener;
-	private Map<String,ArrayList<Integer>> chunksUserID;
+	private Map<String,ArrayList<Integer>> filesUserID;
 
 	public PeerNew() throws IOException {		
 		chunklist = new ArrayList<Chunk>();
 		backupList = new HashMap<String, String>();
 		backupList2 = new HashMap<String, Integer>();
-		chunksUserID = new HashMap<String,ArrayList<Integer>>();
+		filesUserID = new HashMap<String,ArrayList<Integer>>();
 
 		loadChunkList();
 		loadBackupList();
@@ -251,6 +251,7 @@ public class PeerNew {
 					Chunk ficticio = new Chunk(Tools.getBody(answer).getBytes());
 					con_listener.splitMessage(ficticio,Tools.getHead(answer));
 					incConfirmations(ficticio.getFileId(),ficticio.getChunkNo(),degreeListSent);
+					chunk.addUserID(temp.getId());
 				}
 
 				tempRepDegree--;
@@ -271,12 +272,12 @@ public class PeerNew {
 	}
 
 	private void addUserToBackupFile(String filename, User user) {
-		if(chunksUserID.containsKey(filename))
-			chunksUserID.get(filename).add(user.getId());
+		if(filesUserID.containsKey(filename))
+			filesUserID.get(filename).add(user.getId());
 		else {
 			ArrayList<Integer> temp = new ArrayList<Integer>();
 			temp.add(user.getId());
-			chunksUserID.put(filename, temp);
+			filesUserID.put(filename, temp);
 		}
 	}
 
@@ -509,7 +510,7 @@ public class PeerNew {
 			out.close();
 		}
 		else for (Map.Entry<String, String> entry : backupList.entrySet()) {
-			FileManagement.addToBackupListFile(entry.getKey(), entry.getValue(), backupList2.get(entry.getKey()), chunksUserID.get(entry.getKey()));
+			FileManagement.addToBackupListFile(entry.getKey(), entry.getValue(), backupList2.get(entry.getKey()), filesUserID.get(entry.getKey()));
 		}
 	}
 
@@ -527,9 +528,9 @@ public class PeerNew {
 					backupList.put(piecesOfLine[0],piecesOfLine[1]);
 					backupList2.put(piecesOfLine[0],Integer.parseInt(piecesOfLine[2]));
 
-					chunksUserID.put(piecesOfLine[0],new ArrayList<Integer>());
+					filesUserID.put(piecesOfLine[0],new ArrayList<Integer>());
 					for(int i = 2; i < piecesOfLine.length; i++)
-						chunksUserID.get(piecesOfLine[0]).add(Integer.parseInt(piecesOfLine[i]));
+						filesUserID.get(piecesOfLine[0]).add(Integer.parseInt(piecesOfLine[i]));
 				}
 				br.close();
 			}
@@ -590,7 +591,7 @@ public class PeerNew {
 
 				File f = new File("files\\backups\\"+filename);
 				System.gc();
-				
+
 				x = x && f.delete();
 			}
 		}
@@ -722,6 +723,9 @@ public class PeerNew {
 					String[] piecesOfLine = line.split("\\?");
 
 					Chunk temp = new Chunk(piecesOfLine[0],Integer.parseInt(piecesOfLine[1]),Integer.parseInt(piecesOfLine[2]));
+					for(int i = 4; i < piecesOfLine.length; i++) {
+						temp.addUserID(Integer.parseInt(piecesOfLine[i]));
+					}
 					degreeListSent.put(temp,Integer.parseInt(piecesOfLine[3]));
 				}
 				br.close();
@@ -776,11 +780,11 @@ public class PeerNew {
 
 		String fileId = getFileIdOf(string);
 
-		for(Integer id: chunksUserID.get(string)) {
+		for(Integer id: filesUserID.get(string)) {
 			User temp = getUserFromServer(id);
 
 			String response = sendMessage(Tools.generateMessage("DELETE", fileId), temp.getIp(), temp.getPort(),0);
-			
+
 			if(response == null || response.contains("NOTOK")) 
 				sendMessage(Tools.generateNotRespondMessage("DELETE", fileId, temp), this.serverAddress, this.serverPort,0);
 
@@ -794,6 +798,6 @@ public class PeerNew {
 	}
 
 	public void startRestoreChunks(String string) {
-		
+
 	}
 }
