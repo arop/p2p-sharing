@@ -11,6 +11,7 @@ import java.util.regex.Pattern;
 
 import javax.swing.JFileChooser;
 
+import user.User;
 import main.Chunk;
 
 /**
@@ -41,6 +42,14 @@ public abstract class Tools {
 		return m.matches();
 	}
 
+	public static String generateNotRespondMessage(String type, String fileId, User u) {
+		switch(type) {
+		case "DELETE":
+			return "NOTRESPOND DELETE " + Tools.getVersion() + " " + fileId + " " + u.getId() + "\r\n\r\n";
+		}
+		return null;
+	}
+	
 	/**
 	 * 
 	 * @param type
