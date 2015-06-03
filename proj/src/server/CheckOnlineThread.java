@@ -40,7 +40,7 @@ public class CheckOnlineThread extends Thread {
 	}
 
 	/**
-	 * 
+	 * Checks online users 
 	 */
 	@Override
 	public void run() {

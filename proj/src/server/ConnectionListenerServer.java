@@ -1,12 +1,16 @@
 package server;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.lang.reflect.Type;
 import java.security.PrivilegedActionException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLSocket;
@@ -22,11 +26,15 @@ public class ConnectionListenerServer extends Thread{
 	private int port; // Port where the SSL Server needs to listen for new requests from the client
 	private Server mainThread;
 	private CheckOnlineThread checkOnlineThread;
+	
+	private Map<User,ArrayList<String>> pendingMessages;
 
 	public ConnectionListenerServer(int port, Server server, CheckOnlineThread cot){
 		this.port = port;
 		this.mainThread = server;
 		this.checkOnlineThread = cot;
+		
+		pendingMessages = new HashMap<User,ArrayList<String>>();
 	}
 
 	@Override
@@ -160,9 +168,33 @@ public class ConnectionListenerServer extends Thread{
 			String userJson = gson.toJson(u);
 			return Tools.generateJsonMessage("USER", userJson);
 
+		case "NOTRESPOND":
+			saveNotRespondMessage(Tools.getHead(message));
+			break;
+
 		default:
 			break;				
 		}
 		return null;
+	}
+
+	private void saveNotRespondMessage(String string) {
+		//"NOTRESPOND DELETE " + Tools.getVersion() + " " + fileId + " " + u.getId() + "\r\n\r\n";
+		String msg = string.substring(11); //remove NOTRESPOND
+		int userID = Integer.parseInt(msg.split(" +")[3]);
+		try {
+			PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter("..\\pending_messages\\messages.txt")));
+			out.println(msg);
+			out.close();
+		} catch (IOException e) {
+			e.getMessage();
+		}
+		if(pendingMessages.containsKey(mainThread.getdb().getUserById(userID)))
+			pendingMessages.get(mainThread.getdb().getUserById(userID)).add(msg);
+		else {
+			ArrayList<String> temp = new ArrayList<String>();
+			temp.add(msg);
+			pendingMessages.put(mainThread.getdb().getUserById(userID), temp);
+		}
 	}
 }

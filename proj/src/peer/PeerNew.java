@@ -766,6 +766,11 @@ public class PeerNew {
 		return this.backupList.get(string);
 	}
 
+	/**
+	 * DELETE PROTOCOL
+	 * @param string filename
+	 * @throws IOException
+	 */
 	public void startDeleteChunks(String string) throws IOException {
 		if(!isBackedUp(string)) return;
 
@@ -774,7 +779,10 @@ public class PeerNew {
 		for(Integer id: chunksUserID.get(string)) {
 			User temp = getUserFromServer(id);
 
-			sendMessage(Tools.generateMessage("DELETE", fileId), temp.getIp(), temp.getPort(),0);
+			String response = sendMessage(Tools.generateMessage("DELETE", fileId), temp.getIp(), temp.getPort(),0);
+			
+			if(response == null || response.contains("NOTOK")) 
+				sendMessage(Tools.generateNotRespondMessage("DELETE", fileId, temp), this.serverAddress, this.serverPort,0);
 
 			deleteFromSentLists(fileId);
 			refreshBackupList();
