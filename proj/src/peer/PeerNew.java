@@ -78,7 +78,6 @@ public class PeerNew {
 	}
 
 	private LoginFrame loginFrame;
-	//private GUI mainFrame;
 
 	public ArrayList<User> getAllUsersFromServer(){
 		String response = this.sendMessage(Tools.generateMessage("GETALLUSERS"), serverAddress, serverPort,0);
