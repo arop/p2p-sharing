@@ -30,14 +30,14 @@ public class ConnectionListenerServer extends Thread{
 	private Server mainThread;
 	private CheckOnlineThread checkOnlineThread;
 
-	private Map<User,ArrayList<String>> pendingMessages;
+	private Map<Integer,ArrayList<String>> pendingMessages;
 
 	public ConnectionListenerServer(int port, Server server, CheckOnlineThread cot){
 		this.port = port;
 		this.mainThread = server;
 		this.checkOnlineThread = cot;
 
-		pendingMessages = new HashMap<User,ArrayList<String>>();
+		pendingMessages = new HashMap<Integer,ArrayList<String>>();
 		loadNotRespondMapFile();
 	}
 
@@ -148,6 +148,9 @@ public class ConnectionListenerServer extends Thread{
 			User user = null;
 			if( (user = mainThread.login(loginparts[0],loginparts[1])) != null){
 				mainThread.updateUserAddress(user.getId(), sourceAddress);
+
+				sendPendingMessages(user);
+
 				return Tools.generateJsonMessage("OK",gson.toJson(user));
 			}
 
@@ -182,16 +185,23 @@ public class ConnectionListenerServer extends Thread{
 		return null;
 	}
 
+	private void sendPendingMessages(User user) {
+		ArrayList<String> msgs = pendingMessages.get(user.getId());
+
+		if(msgs != null)
+			new SendPendingMsg(msgs,user,mainThread).start();	
+	}
+
 	private void saveNotRespondMessage(String string) {
 		//"NOTRESPOND DELETE " + Tools.getVersion() + " " + fileId + " " + u.getId() + "\r\n\r\n";
 		String msg = string.substring(11); //remove NOTRESPOND
 		int userID = Integer.parseInt(msg.split(" +")[3]);
-		if(pendingMessages.containsKey(mainThread.getdb().getUserById(userID)))
-			pendingMessages.get(mainThread.getdb().getUserById(userID)).add(msg);
+		if(pendingMessages.containsKey(userID))
+			pendingMessages.get(userID).add(msg);
 		else {
 			ArrayList<String> temp = new ArrayList<String>();
 			temp.add(msg);
-			pendingMessages.put(mainThread.getdb().getUserById(userID), temp);
+			pendingMessages.put(userID, temp);
 		}
 		refreshNotRespondMapFile();
 	}
@@ -200,7 +210,7 @@ public class ConnectionListenerServer extends Thread{
 		PrintWriter f0;
 		try {
 			f0 = new PrintWriter(new FileWriter("..\\pending_messages\\messages.txt"));
-			for(Entry<User,ArrayList<String>> e: pendingMessages.entrySet()) {
+			for(Entry<Integer,ArrayList<String>> e: pendingMessages.entrySet()) {
 				for(String msg : e.getValue())
 					f0.println(msg);
 			}
@@ -220,13 +230,13 @@ public class ConnectionListenerServer extends Thread{
 					for(String line; (line = br.readLine()) != null; ) {
 						if(!line.startsWith("DELETE")) break;
 						int userID = Integer.parseInt(line.split(" +")[3]);
-						
-						if(pendingMessages.containsKey(mainThread.getdb().getUserById(userID)))
-							pendingMessages.get(mainThread.getdb().getUserById(userID)).add(line);
+
+						if(pendingMessages.containsKey(userID))
+							pendingMessages.get(userID).add(line);
 						else {
 							ArrayList<String> temp = new ArrayList<String>();
 							temp.add(line);
-							pendingMessages.put(mainThread.getdb().getUserById(userID), temp);
+							pendingMessages.put(userID, temp);
 						}
 					}
 					br.close();
