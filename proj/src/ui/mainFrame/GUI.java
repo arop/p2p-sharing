@@ -13,6 +13,7 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
+import chrriis.dj.nativeswing.swtimpl.NativeInterface;
 import peer.PeerNew;
 import ui.deleteFileFrame.DeleteFilesWindow;
 import ui.restoreFrame.RestoreFilesWindow;
@@ -133,7 +134,7 @@ public class GUI extends JFrame {
 	}
 
 	public static void main(String[] args) {
-
+		
 		EventQueue.invokeLater(new Runnable() {
 
 			@Override

@@ -45,7 +45,7 @@ public class UserDatabase {
 			//con.close();
 		} catch ( Exception e ) {
 			System.err.println( e.getClass().getName() + ": " + e.getMessage() );
-			System.exit(0);
+			return null;
 		}
 		return user;
 	}
@@ -66,9 +66,8 @@ public class UserDatabase {
 			return new User(id, username, email, password_hash, ip, port);
 		} catch (SQLException e) {
 			System.err.println( e.getClass().getName() + ": " + e.getMessage() );
-			System.exit(0);
+			return null;
 		}
-		return null;
 	}
 
 	public User getUserByEmail(String email){
@@ -90,7 +89,33 @@ public class UserDatabase {
 			//con.close();
 		} catch ( Exception e ) {
 			System.err.println( e.getClass().getName() + ": " + e.getMessage() );
-			System.exit(0);
+			return null;
+		}
+		return user;
+	}
+	
+	
+	public User getUserFacebookByFacebookId(long fb_id){
+		Statement stmt = null;
+		User user = null;
+
+		try {
+			Class.forName("org.sqlite.JDBC");
+			con.setAutoCommit(false);
+
+			stmt = con.createStatement();
+			ResultSet rs = stmt.executeQuery( "SELECT * FROM User WHERE facebook_id = '"+fb_id+"';" );
+
+			if (rs.isClosed()) //no users with this id
+				return null;
+			user = getUserFromResultSet(rs, true);
+			rs.close();
+			stmt.close();
+			//con.close();
+		} catch ( Exception e ) {
+			System.err.println( e.getClass().getName() + ": " + e.getMessage() );
+			//System.exit(0);
+			return null;
 		}
 		return user;
 	}
@@ -107,8 +132,8 @@ public class UserDatabase {
 			con.setAutoCommit(false);
 
 			stmt = con.createStatement();
-			String sql = "INSERT INTO User (username,email,password_hash,last_ip, port) " +
-					"VALUES ('"+username+"', '"+email+"', '"+hashed+"', '"+ip+"', "+port+");"; 
+			String sql = "INSERT INTO User (username,email,password_hash,last_ip, port, facebook_id) " +
+					"VALUES ('"+username+"', '"+email+"', '"+hashed+"', '"+ip+"', "+port+", null);"; 
 			stmt.executeUpdate(sql);
 
 			stmt.close();
@@ -116,10 +141,35 @@ public class UserDatabase {
 			//c.close();
 		} catch ( Exception e ) {
 			System.err.println( e.getClass().getName() + ": " + e.getMessage() );
-			System.exit(0);
+			return "fail";
 		}
 
 		return "success";
+	}
+	
+	public boolean registerUserFacebook(String username, long fb_id, String ip, int port){
+		if (getUserFacebookByFacebookId(fb_id) != null)
+			return false;
+
+		Statement stmt = null;
+		try {
+			Class.forName("org.sqlite.JDBC");	
+			con.setAutoCommit(false);
+
+			stmt = con.createStatement();
+			String sql = "INSERT INTO User (username,email,password_hash,last_ip, port, facebook_id) " +
+					"VALUES ('"+username+"', 'not-valid@facebook.com', 'no-need' , '"+ip+"', "+port+", '"+fb_id+"');"; 
+			stmt.executeUpdate(sql);
+
+			stmt.close();
+			con.commit();
+			//c.close();
+		} catch ( Exception e ) {
+			System.err.println( e.getClass().getName() + ": " + e.getMessage() );
+			return false;
+		}
+
+		return true;
 	}
 
 	public void updateLastIp(int id, String ip){
@@ -282,4 +332,24 @@ public class UserDatabase {
 		}
 		return users;
 	}
+
+	
+	public void updateUserPort(int user_id, int port) {
+		Statement stmt = null;
+		try {
+			Class.forName("org.sqlite.JDBC");	
+			con.setAutoCommit(false);
+			stmt = con.createStatement();
+			String sql = "UPDATE User set port = '"+port+"' where id="+user_id+";";
+			stmt.executeUpdate(sql);
+			con.commit();
+			stmt.close();
+		} catch ( Exception e ) {
+			System.err.println( e.getClass().getName() + ": " + e.getMessage() );
+			//System.exit(0);
+			return;
+		}
+	}
 }
+	
+
