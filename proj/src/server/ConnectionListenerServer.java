@@ -1,7 +1,8 @@
 package server;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -11,6 +12,7 @@ import java.security.PrivilegedActionException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLSocket;
@@ -20,21 +22,23 @@ import user.User;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import extra.FileManagement;
 import extra.Tools;
 
 public class ConnectionListenerServer extends Thread{
 	private int port; // Port where the SSL Server needs to listen for new requests from the client
 	private Server mainThread;
 	private CheckOnlineThread checkOnlineThread;
-	
+
 	private Map<User,ArrayList<String>> pendingMessages;
 
 	public ConnectionListenerServer(int port, Server server, CheckOnlineThread cot){
 		this.port = port;
 		this.mainThread = server;
 		this.checkOnlineThread = cot;
-		
+
 		pendingMessages = new HashMap<User,ArrayList<String>>();
+		loadNotRespondMapFile();
 	}
 
 	@Override
@@ -182,19 +186,54 @@ public class ConnectionListenerServer extends Thread{
 		//"NOTRESPOND DELETE " + Tools.getVersion() + " " + fileId + " " + u.getId() + "\r\n\r\n";
 		String msg = string.substring(11); //remove NOTRESPOND
 		int userID = Integer.parseInt(msg.split(" +")[3]);
-		try {
-			PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter("..\\pending_messages\\messages.txt")));
-			out.println(msg);
-			out.close();
-		} catch (IOException e) {
-			e.getMessage();
-		}
 		if(pendingMessages.containsKey(mainThread.getdb().getUserById(userID)))
 			pendingMessages.get(mainThread.getdb().getUserById(userID)).add(msg);
 		else {
 			ArrayList<String> temp = new ArrayList<String>();
 			temp.add(msg);
 			pendingMessages.put(mainThread.getdb().getUserById(userID), temp);
+		}
+		refreshNotRespondMapFile();
+	}
+
+	private void refreshNotRespondMapFile() {
+		PrintWriter f0;
+		try {
+			f0 = new PrintWriter(new FileWriter("..\\pending_messages\\messages.txt"));
+			for(Entry<User,ArrayList<String>> e: pendingMessages.entrySet()) {
+				for(String msg : e.getValue())
+					f0.println(msg);
+			}
+			f0.close();
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+	}
+
+	public void loadNotRespondMapFile() {
+		String file = "..\\pending_messages\\messages.txt";
+		try {
+			if(!FileManagement.fileExists(file))
+				(new File(file)).createNewFile();
+			else {
+				try(BufferedReader br = new BufferedReader(new FileReader(new File(file)))) {
+					for(String line; (line = br.readLine()) != null; ) {
+						if(!line.startsWith("DELETE")) break;
+						int userID = Integer.parseInt(line.split(" +")[3]);
+						
+						if(pendingMessages.containsKey(mainThread.getdb().getUserById(userID)))
+							pendingMessages.get(mainThread.getdb().getUserById(userID)).add(line);
+						else {
+							ArrayList<String> temp = new ArrayList<String>();
+							temp.add(line);
+							pendingMessages.put(mainThread.getdb().getUserById(userID), temp);
+						}
+					}
+					br.close();
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 }
