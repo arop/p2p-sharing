@@ -12,6 +12,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
@@ -59,6 +60,7 @@ public class PeerNew {
 	private String serverAddress = "localhost";
 	private int serverPort = 16500; 
 
+
 	//private DegreeMonitorThread degMonitor;
 	private Map <Chunk, Integer> degreeListSent;
 
@@ -68,7 +70,10 @@ public class PeerNew {
 	private Map <String, Integer> backupList2;
 
 	private ArrayList<Chunk> chunklist;
+	
 	private ArrayList<Chunk> chunksReceived;
+	private int chunksToReceive; 
+	private String fileToRecover;
 
 	ConnectionListenerPeer con_listener;
 	private Map<String,ArrayList<Integer>> filesUserID;
@@ -83,6 +88,8 @@ public class PeerNew {
 		loadBackupList();
 
 		degreeListSent = new HashMap<Chunk, Integer>();
+		
+		chunksReceived = new ArrayList<Chunk>();
 
 		if(degreeListSent.isEmpty()) {
 			readDegreeList("files\\lists\\degreeListSent.txt");
@@ -92,7 +99,7 @@ public class PeerNew {
 	private LoginFrame loginFrame;
 
 	public ArrayList<User> getAllUsersFromServer(){
-		String response = this.sendMessage(Tools.generateMessage("GETALLUSERS"), serverAddress, serverPort,0);
+		String response = this.sendMessage(Tools.generateGetAllUsersMessage("GETALLUSERS"), serverAddress, serverPort,0);
 		Gson gson = new Gson();
 		String type = response.split(" +")[0];
 		if (!type.equals("USERS"))
@@ -104,6 +111,12 @@ public class PeerNew {
 	}
 
 	public void getFriendsFromServer(){
+		System.out.println("lolitos");
+		System.out.println("LOCALUSERLOCLAID" + this.localUser.getId()  );
+		System.out.println(serverAddress);
+		System.out.println(serverPort);
+		System.out.println(Tools.generateMessage("GETFRIENDS", this.localUser.getId()));
+		
 		String response = this.sendMessage(Tools.generateMessage("GETFRIENDS", this.localUser.getId()), serverAddress, serverPort,0);
 		Gson gson = new Gson();
 		String type = Tools.getType(response);
@@ -117,7 +130,7 @@ public class PeerNew {
 	}
 
 	public ArrayList<User> getOnlineUsersFromServer(){
-		String response = this.sendMessage(Tools.generateMessage("GETONLINEUSERS"), serverAddress, serverPort,0);
+		String response = this.sendMessage(Tools.generateGetAllUsersMessage("GETONLINEUSERS"), serverAddress, serverPort,0);
 		Gson gson = new Gson();
 		String type = Tools.getType(response);
 		if (!type.equals("ONLINEUSERS")){
@@ -463,9 +476,42 @@ public class PeerNew {
 			out.println(msg);
 
 			//GET RESPONSE 
+			int state = 0;
+			boolean firstTime = true;
+
+			response = "";
+			char nextChar = 0;
+
+			while(true) {		
+							
+				nextChar = (char) in.read();
+				response += nextChar;
+
+				if(nextChar == '\r' && (state == 0 || state == 2)) {
+					state++;
+				}
+				else if(nextChar == '\n' && state == 1) {
+					state++;
+				}
+				else if(nextChar == '\n' && state == 3) {
+					if( (response.contains("CHUNK") || response.contains("GETUSER") ||  response.contains("ADDFRIENDS") || 
+							 response.contains("BACKUPFILE")  || response.contains("GETALLUSERS") || response.contains("OK") || response.contains("NOTOK") ||
+							  response.contains("LOGIN") || response.contains("FRIENDS") || response.contains("USER") ||  response.contains("ONLINEUSERS")) && firstTime) {
+						firstTime = false;
+						state = 0;
+					}
+					else break;
+				}
+				else state = 0;
+			}
+			
+			firstTime = true;
+			
+			/*
 			response = in.readLine();
 			response += in.readLine(); 				//(isto está assim hardcoded pq o 
 			response += "\r\n\r\n" + in.readLine(); 	//readLine lê até ao \r\n apenas)
+			*/
 
 			//PARSE RESPONSE
 			//String origin_ip = sslSocket.getInetAddress().getHostAddress();
@@ -746,6 +792,7 @@ public class PeerNew {
 	 * @return
 	 */
 	public boolean alreadyExists(String fileId, int chunkNo) {
+		System.out.println("entrou no alreadyExists");
 		for (Chunk chunk : chunksReceived) {
 			if(chunk.getFileId().equals(fileId) && chunk.getChunkNo() == chunkNo) 
 				return true;
@@ -852,7 +899,7 @@ public class PeerNew {
 		for(Integer id: filesUserID.get(string)) {
 			User temp = getUserFromServer(id);
 
-			String response = sendMessage(Tools.generateMessage("DELETE", fileId), temp.getIp(), temp.getPort(),0);
+			String response = sendMessage(Tools.generateDeleteMessage("DELETE", fileId), temp.getIp(), temp.getPort(),0);
 
 			if(response == null || response.contains("NOTOK")) 
 				sendMessage(Tools.generateNotRespondMessage("DELETE", fileId, temp), this.serverAddress, this.serverPort,0);
@@ -866,7 +913,84 @@ public class PeerNew {
 		return new ArrayList<String>(backupList.keySet());
 	}
 
-	public void startRestoreChunks(String string) {
+	public void startRestoreChunks(String filename) {
+		String fileId = getFileIdOf(filename);
+		
+		 setChunksToReceive(getFileNumberChunks(filename));
+		 fileToRecover = filename;
+		
+		for (Map.Entry<Chunk, Integer> entry : degreeListSent.entrySet()) {
+			ArrayList<Integer> temp = entry.getKey().getUserIDs();
+			Chunk chunk = entry.getKey();
+
+			for(int i = 0; i < temp.size(); i++) {
+				User sonserina = getUserFromServer(temp.get(i));
+				String response = sendMessage(Tools.generateGetChunkMessage("GETCHUNK", fileId,chunk.getChunkNo()), sonserina.getIp(), sonserina.getPort(),0);
+				processChunkMessage(response);
+			}
+			
+			
+
+		}		
 
 	}
+	
+	
+	public void processChunkMessage(String message) {
+		if(message == null) {
+			System.out.println("Chunk null. returning");
+		}
+		
+		System.out.println(message);
+		
+		System.out.println("ESTA NO CHUNK");
+		Chunk chunkRestored = new Chunk(Tools.getBody(message).getBytes(StandardCharsets.ISO_8859_1));
+		con_listener.splitMessage(chunkRestored,Tools.getHead(message));
+		
+	
+		
+		System.out.println("Fileid e chunkno: " + chunkRestored.getFileId() + " " +  chunkRestored.getChunkNo());
+		System.out.println(Arrays.toString(chunkRestored.getByteArray()));
+		
+		//so guarda o chunk se ainda nao o tiver
+		if(!alreadyExists(chunkRestored.getFileId(), chunkRestored.getChunkNo())) {
+			addToReceivedChunks(chunkRestored);
+		}
+		// se ja tem os chunks todos, restora o ficheiro
+		if(getChunksToReceive() == getReceivedChunks().size()) {
+			System.out.println("Recovering file!");
+			FileManagement.recover_file(fileToRecover,chunksReceived);
+			clearReceivedChunks();
+		}
+
+	}
+	
+
+	public int getChunksToReceive() {
+		return chunksToReceive;
+	}
+
+	public void addToReceivedChunks(Chunk c) {
+		chunksReceived.add(c);
+	}
+
+	public void clearReceivedChunks() {
+		chunksReceived.clear();
+	}
+	
+	public ArrayList<Chunk> getReceivedChunks() {
+		return chunksReceived;
+	}
+	
+	public String getFileToRecover() {
+		return fileToRecover;
+	}
+	
+	public void setChunksToReceive(int i) {
+		chunksToReceive = i;
+	}
+
+
+
+	
 }

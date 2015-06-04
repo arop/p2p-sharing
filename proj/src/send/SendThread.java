@@ -100,7 +100,7 @@ public class SendThread extends Thread {
 					}
 
 					String fileId = main.getFileIdOf(output.get(1));
-					sendMessage(Tools.generateMessage("DELETE", fileId), main.getMC_IP(), main.getMC_Port());
+					sendMessage(Tools.generateDeleteMessage("DELETE", fileId), main.getMC_IP(), main.getMC_Port());
 					try {
 						main.deleteFromSentLists(fileId);
 						main.refreshBackupList();
@@ -163,7 +163,7 @@ public class SendThread extends Thread {
 		main.setFileToRecover(filename);
 
 		for(int i = 0; i < main.getFileNumberChunks(filename); i++) {
-			sendMessage(Tools.generateMessage("GETCHUNK",main.getFileIdOf(filename),i), main.getMC_IP(),main.getMC_Port());
+			sendMessage(Tools.generateGetChunkMessage("GETCHUNK",main.getFileIdOf(filename),i), main.getMC_IP(),main.getMC_Port());
 		}
 	}
 

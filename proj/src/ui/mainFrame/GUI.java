@@ -114,16 +114,16 @@ public class GUI extends JFrame {
 			}
 		});
 
-		button = new JButton("Delete File");
-		button.setPreferredSize(new Dimension(buttonWidth, buttonHeight));
-		panel.add(button);
-		button.addActionListener(new ActionListener()
-		{
-			@Override	
-			public void actionPerformed(ActionEvent e){
-				new DeleteFilesWindow(mainThread);
-			}
-		});
+//		button = new JButton("Delete File");
+//		button.setPreferredSize(new Dimension(buttonWidth, buttonHeight));
+//		panel.add(button);
+//		button.addActionListener(new ActionListener()
+//		{
+//			@Override	
+//			public void actionPerformed(ActionEvent e){
+//				new DeleteFilesWindow(mainThread);
+//			}
+//		});
 
 
 		button = new JButton("<html><center>Reclaim<br>Space<center></html>");

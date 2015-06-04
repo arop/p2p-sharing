@@ -86,7 +86,7 @@ public abstract class Tools {
 	 * @param fileId
 	 * @return
 	 */
-	public static String generateMessage(String type, String fileId) {
+	public static String generateDeleteMessage(String type, String fileId) {
 		return "DELETE " + Tools.getVersion() + " " + fileId + "\r\n\r\n";
 	}
 
@@ -97,7 +97,7 @@ public abstract class Tools {
 	 * @param chunkNo
 	 * @return
 	 */
-	public static String generateMessage(String type, String fileId, int chunkNo) {
+	public static String generateGetChunkMessage(String type, String fileId, int chunkNo) {
 		return "GETCHUNK " + Tools.getVersion() + " " + fileId + " " + chunkNo + "\r\n\r\n";
 	}
 
@@ -109,7 +109,7 @@ public abstract class Tools {
 	 * @param type
 	 * @return
 	 */
-	public static String generateMessage(String type){
+	public static String generateGetAllUsersMessage(String type){
 		String message = null;
 		switch(type) {
 		case "GETALLUSERS":
@@ -140,7 +140,7 @@ public abstract class Tools {
 	 * @return
 	 */
 	public static String generateJsonMessage(String type, String json_body){
-		String message = type + " " + Tools.getVersion() + "\r\n\r\n" + json_body ;
+		String message = type + " " + Tools.getVersion() + "\r\n\r\n" + json_body + "\r\n\r\n" ;
 		return message;
 	}
 
@@ -154,7 +154,7 @@ public abstract class Tools {
 	 * @return generated message
 	 */
 	public static String generateJsonMessage(String type, int user_id, String json_body){
-		String message = type + " " + Tools.getVersion() + " " + user_id + "\r\n\r\n" + json_body ;
+		String message = type + " " + Tools.getVersion() + " " + user_id + "\r\n\r\n" + json_body + "\r\n\r\n" ;
 		return message;
 	}
 
@@ -170,8 +170,7 @@ public abstract class Tools {
 		String message = type + " " + Tools.getVersion() + " " + user_id + "\r\n\r\n" ;
 		return message;
 	}
-
-
+	
 	public static String getPeerAddress() throws UnknownHostException {
 		return InetAddress.getLocalHost().getHostAddress();
 	}

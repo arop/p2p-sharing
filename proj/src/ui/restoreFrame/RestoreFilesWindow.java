@@ -23,13 +23,8 @@ public class RestoreFilesWindow extends JFrame {
 
 		if (myList.isEmpty())
 			System.out.println("lista é nula");
-		else{
-			for(Object u : myList){
-				System.out.println(u);
-			}
-		}
 
-		this.add(new RestoreListPanel(myList,mainThread));
+		this.add(new RestoreListPanel(myList,this,mainThread));
 
 		this.pack();
 		this.setVisible(true);

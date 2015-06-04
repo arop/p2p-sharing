@@ -14,6 +14,14 @@ public class Chunk {
 	private int chunkNo, replicationDeg = 1;
 	private ArrayList<Integer> userIDs;
 
+	public ArrayList<Integer> getUserIDs() {
+		return userIDs;
+	}
+
+	public void setUserIDs(ArrayList<Integer> userIDs) {
+		this.userIDs = userIDs;
+	}
+
 	public Chunk(byte[] c) {
 		chunk = c.clone();
 		userIDs = new ArrayList<Integer>();
