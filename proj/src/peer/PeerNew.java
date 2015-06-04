@@ -12,13 +12,9 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
-import java.nio.charset.StandardCharsets;
-import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.Security;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -33,9 +29,7 @@ import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
-import javax.net.ssl.X509TrustManager;
 import javax.swing.SwingUtilities;
 
 import main.Chunk;
@@ -60,8 +54,6 @@ public class PeerNew {
 	private String serverAddress = "localhost";
 	private int serverPort = 16500; 
 
-
-	//private DegreeMonitorThread degMonitor;
 	private Map <Chunk, Integer> degreeListSent;
 
 	ArrayList<User> friends;
@@ -70,7 +62,7 @@ public class PeerNew {
 	private Map <String, Integer> backupList2;
 
 	private ArrayList<Chunk> chunklist;
-	
+
 	private ArrayList<Chunk> chunksReceived;
 	private int chunksToReceive; 
 	private String fileToRecover;
@@ -88,7 +80,7 @@ public class PeerNew {
 		loadBackupList();
 
 		degreeListSent = new HashMap<Chunk, Integer>();
-		
+
 		chunksReceived = new ArrayList<Chunk>();
 
 		if(degreeListSent.isEmpty()) {
@@ -99,7 +91,7 @@ public class PeerNew {
 	private LoginFrame loginFrame;
 
 	public ArrayList<User> getAllUsersFromServer(){
-		String response = this.sendMessage(Tools.generateGetAllUsersMessage("GETALLUSERS"), serverAddress, serverPort,0);
+		String response = this.sendMessage(Tools.generateMessage("GETALLUSERS"), serverAddress, serverPort,0);
 		Gson gson = new Gson();
 		String type = response.split(" +")[0];
 		if (!type.equals("USERS"))
@@ -116,7 +108,7 @@ public class PeerNew {
 		System.out.println(serverAddress);
 		System.out.println(serverPort);
 		System.out.println(Tools.generateMessage("GETFRIENDS", this.localUser.getId()));
-		
+
 		String response = this.sendMessage(Tools.generateMessage("GETFRIENDS", this.localUser.getId()), serverAddress, serverPort,0);
 		Gson gson = new Gson();
 		String type = Tools.getType(response);
@@ -130,7 +122,7 @@ public class PeerNew {
 	}
 
 	public ArrayList<User> getOnlineUsersFromServer(){
-		String response = this.sendMessage(Tools.generateGetAllUsersMessage("GETONLINEUSERS"), serverAddress, serverPort,0);
+		String response = this.sendMessage(Tools.generateMessage("GETONLINEUSERS"), serverAddress, serverPort,0);
 		Gson gson = new Gson();
 		String type = Tools.getType(response);
 		if (!type.equals("ONLINEUSERS")){
@@ -160,44 +152,44 @@ public class PeerNew {
 	}
 
 	public void startPeer(){
-		
+
 		while(true){
 			loginFrame = new LoginFrame(this);
-			
+
 			String loginState;
 			while( (loginState = loginFrame.getState1()).equals("running")) {	
 				//System.out.println(loginFrame.isSuccess());
 			}
 			loginFrame.dispose();
-			
+
 			if (!loginState.equals("success")){
-				
+
 				if (this.loginFacebook(Integer.parseInt(loginState.split("-")[1]))){
 					break;
 				}
 			}
 			else break;
 		}
-		
+
 
 		this.friends = new ArrayList<User>();//initialize list
 
 		this.getFriendsFromServer(); //update list with values from server
 		PeerNew thisThread = this;
-		
+
 		NativeInterface.open(); // not sure what else may be needed for this
 		try {
 			SwingUtilities.invokeAndWait(new Runnable() {
-			      public void run() {
-			    	  GUI gui = new GUI(thisThread);
-			  			gui.setVisible(true);
-			      }
-			    });
+				public void run() {
+					GUI gui = new GUI(thisThread);
+					gui.setVisible(true);
+				}
+			});
 		} catch (InvocationTargetException | InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 
 		//connection listener -> thread always reading in user's port.
 		con_listener = new ConnectionListenerPeer(this);
@@ -235,15 +227,15 @@ public class PeerNew {
 		JsonElement jelement = new JsonParser().parse(json);
 		System.out.println("2");
 		JsonObject  jobject = jelement.getAsJsonObject();
-		
+
 		String id = jobject.get("id").toString();
 		id = id.substring(1, id.length()-1); // removes double quotes 
-		
+
 		System.out.println("3");
-		
+
 		String name = jobject.get("name").toString();
 		name = name.substring(1, name.length()-1); // removes double quotes 
-		
+
 		System.out.println("4");
 		String messagebody = id + "#" + name + "#" + port;
 		String response = this.sendMessage(Tools.generateJsonMessage("LOGINFACEBOOK",messagebody), serverAddress, serverPort,0);
@@ -257,8 +249,8 @@ public class PeerNew {
 		System.out.println("7");
 		return true;
 	}
-	
-	
+
+
 	public boolean register(String username, String email, String password1, String password2, int desiredPort) {
 		if(password1.equals(password2)) {
 			String messagebody = username + " " + email + " " + password1 + " " + desiredPort;
@@ -483,7 +475,7 @@ public class PeerNew {
 			char nextChar = 0;
 
 			while(true) {		
-							
+
 				nextChar = (char) in.read();
 				response += nextChar;
 
@@ -495,8 +487,8 @@ public class PeerNew {
 				}
 				else if(nextChar == '\n' && state == 3) {
 					if( (response.contains("CHUNK") || response.contains("GETUSER") ||  response.contains("ADDFRIENDS") || 
-							 response.contains("BACKUPFILE")  || response.contains("GETALLUSERS") || response.contains("OK") || response.contains("NOTOK") ||
-							  response.contains("LOGIN") || response.contains("FRIENDS") || response.contains("USER") ||  response.contains("ONLINEUSERS")) && firstTime) {
+							response.contains("BACKUPFILE")  || response.contains("GETALLUSERS") || response.contains("OK") || response.contains("NOTOK") ||
+							response.contains("LOGIN") || response.contains("FRIENDS") || response.contains("USER") ||  response.contains("ONLINEUSERS")) && firstTime) {
 						firstTime = false;
 						state = 0;
 					}
@@ -504,14 +496,14 @@ public class PeerNew {
 				}
 				else state = 0;
 			}
-			
+
 			firstTime = true;
-			
+
 			/*
 			response = in.readLine();
 			response += in.readLine(); 				//(isto está assim hardcoded pq o 
 			response += "\r\n\r\n" + in.readLine(); 	//readLine lê até ao \r\n apenas)
-			*/
+			 */
 
 			//PARSE RESPONSE
 			//String origin_ip = sslSocket.getInetAddress().getHostAddress();
@@ -854,9 +846,6 @@ public class PeerNew {
 		else { 
 			System.err.println("invalid map type");
 		}
-
-		//FileManagement.saveMapToFile(degreeListSent, "files\\lists\\degreeListSent.txt");
-
 	}
 
 	public void removeFromSentMap(String fileId) throws IOException {		
@@ -866,8 +855,6 @@ public class PeerNew {
 				it.remove();
 			}
 		}
-		//FileManagement.saveMapToFile(degreeListSent, "files\\lists\\degreeListSent.txt");
-
 	}
 
 	public Map<Chunk, Integer> getSentMap() {
@@ -915,10 +902,10 @@ public class PeerNew {
 
 	public void startRestoreChunks(String filename) {
 		String fileId = getFileIdOf(filename);
-		
-		 setChunksToReceive(getFileNumberChunks(filename));
-		 fileToRecover = filename;
-		
+
+		setChunksToReceive(getFileNumberChunks(filename));
+		fileToRecover = filename;
+
 		for (Map.Entry<Chunk, Integer> entry : degreeListSent.entrySet()) {
 			ArrayList<Integer> temp = entry.getKey().getUserIDs();
 			Chunk chunk = entry.getKey();
@@ -928,30 +915,20 @@ public class PeerNew {
 				String response = sendMessage(Tools.generateGetChunkMessage("GETCHUNK", fileId,chunk.getChunkNo()), sonserina.getIp(), sonserina.getPort(),0);
 				processChunkMessage(response);
 			}
-			
-			
-
 		}		
-
 	}
-	
-	
+
 	public void processChunkMessage(String message) {
 		if(message == null) {
 			System.out.println("Chunk null. returning");
 		}
+
+		Gson g = new Gson();
 		
-		System.out.println(message);
-		
-		System.out.println("ESTA NO CHUNK");
-		Chunk chunkRestored = new Chunk(Tools.getBody(message).getBytes(StandardCharsets.ISO_8859_1));
-		con_listener.splitMessage(chunkRestored,Tools.getHead(message));
-		
-	
-		
-		System.out.println("Fileid e chunkno: " + chunkRestored.getFileId() + " " +  chunkRestored.getChunkNo());
-		System.out.println(Arrays.toString(chunkRestored.getByteArray()));
-		
+		//Chunk chunkRestored = new Chunk(Tools.getBody(message).getBytes(StandardCharsets.ISO_8859_1));
+		Chunk chunkRestored = g.fromJson(Tools.getBody(message), Chunk.class);
+//		con_listener.splitMessage(chunkRestored,Tools.getHead(message));
+
 		//so guarda o chunk se ainda nao o tiver
 		if(!alreadyExists(chunkRestored.getFileId(), chunkRestored.getChunkNo())) {
 			addToReceivedChunks(chunkRestored);
@@ -962,9 +939,7 @@ public class PeerNew {
 			FileManagement.recover_file(fileToRecover,chunksReceived);
 			clearReceivedChunks();
 		}
-
 	}
-	
 
 	public int getChunksToReceive() {
 		return chunksToReceive;
@@ -977,20 +952,16 @@ public class PeerNew {
 	public void clearReceivedChunks() {
 		chunksReceived.clear();
 	}
-	
+
 	public ArrayList<Chunk> getReceivedChunks() {
 		return chunksReceived;
 	}
-	
+
 	public String getFileToRecover() {
 		return fileToRecover;
 	}
-	
+
 	public void setChunksToReceive(int i) {
 		chunksToReceive = i;
 	}
-
-
-
-	
 }

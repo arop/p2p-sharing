@@ -6,10 +6,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
 import java.security.PrivilegedActionException;
-import java.util.Random;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
@@ -17,6 +15,8 @@ import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.TrustManagerFactory;
+
+import com.google.gson.Gson;
 
 import main.Chunk;
 import extra.FileManagement;
@@ -35,7 +35,7 @@ public class ConnectionListenerPeer extends Thread {
 		SSLSocket sslSocket = null ;
 
 		while(true){
-			
+
 			try {
 				sslServerSocket = getServerSocket(this.mainThread.getLocalUser().getPort());
 				if (sslServerSocket == null){
@@ -52,19 +52,8 @@ public class ConnectionListenerPeer extends Thread {
 
 					String finalString = "";
 					char nextChar = 0;
-					int hexValue = 0;
 
 					while(true) {		
-						
-						//System.out.println("Estou aqui preso no loop");
-						//Thread.sleep(500);
-						//System.out.println("State:" + state);
-						
-						//System.out.println(" hex: " + hexValue);
-						
-						//hexValue = in.read();
-						
-						
 						nextChar = (char) in.read();
 						finalString += nextChar;
 
@@ -83,11 +72,9 @@ public class ConnectionListenerPeer extends Thread {
 						}
 						else state = 0;
 					}
-					
-					System.out.println("EDULICTATIVO: " + finalString);
-					
+
 					firstTime = true;
-										
+
 					System.out.println("message received: \n	" + Tools.getHead(finalString));
 					String origin_ip = sslSocket.getInetAddress().getHostAddress();
 					//PROCESS RECEIVED MESSAGE
@@ -159,12 +146,12 @@ public class ConnectionListenerPeer extends Thread {
 
 		switch(messageHeadParts[0]) {
 		case "ISONLINE":
-			return Tools.generateGetAllUsersMessage("OK");
+			return Tools.generateMessage("OK");
 
 		case "PUTCHUNK":
-			Chunk temp = new Chunk(Tools.getBody(message).getBytes(StandardCharsets.ISO_8859_1));
-
-			splitMessage(temp,Tools.getHead(message));
+			Gson g = new Gson();
+			Chunk temp = g.fromJson(Tools.getBody(message), Chunk.class);
+			//Chunk temp = new Chunk(Tools.getBody(message).getBytes(StandardCharsets.ISO_8859_1));
 
 			if(!mainThread.hasChunk(temp.getFileId(), temp.getChunkNo())) {
 				if(Tools.folderSize(new File("files\\backups")) + temp.getByteArray().length-1 <= Tools.getFolderSize() ) {
@@ -178,8 +165,8 @@ public class ConnectionListenerPeer extends Thread {
 
 		case "DELETE":
 			if(mainThread.deleteChunksOfFile(messageHeadParts[2]))
-				return Tools.generateGetAllUsersMessage("OK");
-			else return Tools.generateGetAllUsersMessage("NOTOK");
+				return Tools.generateMessage("OK");
+			else return Tools.generateMessage("NOTOK");
 
 		case "BACKUPFILE":
 			try{
@@ -190,29 +177,21 @@ public class ConnectionListenerPeer extends Thread {
 				return Tools.generateJsonMessage("OK", String.valueOf(port));
 			}
 			catch (ArrayIndexOutOfBoundsException e) {
-				return Tools.generateGetAllUsersMessage("NOTOK");
+				return Tools.generateMessage("NOTOK");
 			}
-			
+
 		case "GETCHUNK":
 			//GETCHUNK <Version> <FileId> <ChunkNo> <CRLF><CRLF>
-			
+
 			String fileId = messageHeadParts[2];
 			int chunkNo = Integer.parseInt(messageHeadParts[3]);
-			
+
 			Chunk c = null;
-			
-			System.out.println("CONINHA");
-			
+
 			if(mainThread.hasChunk(fileId, chunkNo)) {
 				c = mainThread.searchChunk(fileId,chunkNo);
-				
-				System.out.println("AH E TAL FRASE" + c.getByteArray());
-				
 				return Tools.generateMessage("CHUNK",c);
 			}
-	
-	
-
 		default:
 			break;				
 		}
@@ -225,8 +204,4 @@ public class ConnectionListenerPeer extends Thread {
 		chunk.setChunkNo(Integer.parseInt(temp[3].trim()));
 		if(temp.length > 4) chunk.setReplicationDeg(Integer.parseInt(temp[4].trim()));
 	}
-	
-	
-
-
 }
