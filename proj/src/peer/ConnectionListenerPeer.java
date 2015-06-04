@@ -9,6 +9,7 @@ import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
 import java.security.PrivilegedActionException;
+import java.util.Random;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
@@ -34,6 +35,7 @@ public class ConnectionListenerPeer extends Thread {
 		SSLSocket sslSocket = null ;
 
 		while(true){
+			
 			try {
 				sslServerSocket = getServerSocket(this.mainThread.getLocalUser().getPort());
 				if (sslServerSocket == null){
@@ -49,9 +51,20 @@ public class ConnectionListenerPeer extends Thread {
 					BufferedReader in = new BufferedReader(new InputStreamReader(sslSocket.getInputStream())); //lê daqui
 
 					String finalString = "";
-					char nextChar;
+					char nextChar = 0;
+					int hexValue = 0;
 
-					while(true) {					
+					while(true) {		
+						
+						//System.out.println("Estou aqui preso no loop");
+						//Thread.sleep(500);
+						//System.out.println("State:" + state);
+						
+						//System.out.println(" hex: " + hexValue);
+						
+						//hexValue = in.read();
+						
+						
 						nextChar = (char) in.read();
 						finalString += nextChar;
 
@@ -62,7 +75,7 @@ public class ConnectionListenerPeer extends Thread {
 							state++;
 						}
 						else if(nextChar == '\n' && state == 3) {
-							if((finalString.contains("PUTCHUNK") || finalString.contains("CHUNK")) && firstTime) {
+							if(finalString.contains("PUTCHUNK") && firstTime) {
 								firstTime = false;
 								state = 0;
 							}
@@ -70,7 +83,11 @@ public class ConnectionListenerPeer extends Thread {
 						}
 						else state = 0;
 					}
-
+					
+					System.out.println("EDULICTATIVO: " + finalString);
+					
+					firstTime = true;
+										
 					System.out.println("message received: \n	" + Tools.getHead(finalString));
 					String origin_ip = sslSocket.getInetAddress().getHostAddress();
 					//PROCESS RECEIVED MESSAGE
@@ -135,13 +152,14 @@ public class ConnectionListenerPeer extends Thread {
 	 * @param message
 	 * @return Response to received message. Null if not applicable.
 	 * @throws IOException 
+	 * @throws InterruptedException 
 	 */
-	public String parseReceivedMessage(String message) throws IOException{
+	public String parseReceivedMessage(String message) throws IOException, InterruptedException{
 		String[] messageHeadParts = Tools.getHead(message).split(" +");
 
 		switch(messageHeadParts[0]) {
 		case "ISONLINE":
-			return Tools.generateMessage("OK");
+			return Tools.generateGetAllUsersMessage("OK");
 
 		case "PUTCHUNK":
 			Chunk temp = new Chunk(Tools.getBody(message).getBytes(StandardCharsets.ISO_8859_1));
@@ -160,8 +178,8 @@ public class ConnectionListenerPeer extends Thread {
 
 		case "DELETE":
 			if(mainThread.deleteChunksOfFile(messageHeadParts[2]))
-				return Tools.generateMessage("OK");
-			else return Tools.generateMessage("NOTOK");
+				return Tools.generateGetAllUsersMessage("OK");
+			else return Tools.generateGetAllUsersMessage("NOTOK");
 
 		case "BACKUPFILE":
 			try{
@@ -172,8 +190,28 @@ public class ConnectionListenerPeer extends Thread {
 				return Tools.generateJsonMessage("OK", String.valueOf(port));
 			}
 			catch (ArrayIndexOutOfBoundsException e) {
-				return Tools.generateMessage("NOTOK");
+				return Tools.generateGetAllUsersMessage("NOTOK");
 			}
+			
+		case "GETCHUNK":
+			//GETCHUNK <Version> <FileId> <ChunkNo> <CRLF><CRLF>
+			
+			String fileId = messageHeadParts[2];
+			int chunkNo = Integer.parseInt(messageHeadParts[3]);
+			
+			Chunk c = null;
+			
+			System.out.println("CONINHA");
+			
+			if(mainThread.hasChunk(fileId, chunkNo)) {
+				c = mainThread.searchChunk(fileId,chunkNo);
+				
+				System.out.println("AH E TAL FRASE" + c.getByteArray());
+				
+				return Tools.generateMessage("CHUNK",c);
+			}
+	
+	
 
 		default:
 			break;				
@@ -187,6 +225,8 @@ public class ConnectionListenerPeer extends Thread {
 		chunk.setChunkNo(Integer.parseInt(temp[3].trim()));
 		if(temp.length > 4) chunk.setReplicationDeg(Integer.parseInt(temp[4].trim()));
 	}
+	
+	
 
 
 }
