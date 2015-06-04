@@ -155,23 +155,6 @@ public class ConnectionListenerServer extends Thread{
 			}
 
 			return Tools.generateMessage("NOTOK");
-			
-		case "LOGINFACEBOOK":
-			String[] loginFBparts = Tools.getBody(message).split("#");
-			
-			System.out.println("Username: " + loginFBparts[1]);
-			System.out.println("fb id: " + loginFBparts[0]);
-			int portUser = Integer.parseInt(loginFBparts[2]);
-			User userFb = null;
-			if( (userFb = mainThread.loginFacebook(loginFBparts[1], Long.parseLong(loginFBparts[0]), sourceAddress, portUser)) != null){
-				mainThread.updateUserAddress(userFb.getId(), sourceAddress);
-				mainThread.updateUserPort(userFb.getId(), portUser);
-				sendPendingMessages(userFb);
-
-				return Tools.generateJsonMessage("OK",gson.toJson(userFb));
-			}
-
-			return Tools.generateMessage("NOTOK");
 
 		case "REGISTER":
 			String[] registerParts = Tools.getBody(message).split(" ");

@@ -1,10 +1,12 @@
 package extra;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -50,6 +52,66 @@ public abstract class Tools {
 		}
 		return null;
 	}
+	
+	
+	public static String generateNotRespondMessage(String type, String fileId, int chunkNo) {
+		switch(type) {
+		case "GETCHUNK":
+			return "NOTRESPOND GETCHUNK " + Tools.getVersion() + " " + fileId + " " + chunkNo + "\r\n\r\n";
+		}
+		return null;
+	}
+	
+	
+	
+	public static String sendGetChunkServer(String type, String fileId, User u) {
+		switch(type) {
+		case "DELETE":
+			return "NOTRESPOND DELETE " + Tools.getVersion() + " " + fileId + " " + u.getId() + "\r\n\r\n";
+		}
+		return null;
+	}
+	
+	/**
+	 * 
+	 * @param in
+	 * @param messagesWithBody
+	 * @return
+	 * @throws IOException
+	 */
+	public static String stateMachine(BufferedReader in,ArrayList<String> messagesWithBody ) throws IOException {
+		String response;
+		int state = 0;
+		boolean firstTime = true;
+		
+		response = "";
+		char nextChar = 0;
+
+		while(true) {		
+
+			nextChar = (char) in.read();
+			response += nextChar;
+
+			if(nextChar == '\r' && (state == 0 || state == 2)) {
+				state++;
+			}
+			else if(nextChar == '\n' && state == 1) {
+				state++;
+			}
+			else if(nextChar == '\n' && state == 3) {
+				if(messagesWithBody.contains(response.substring(0, response.indexOf(" "))) && firstTime) {
+					firstTime = false;
+					state = 0;
+				}
+				else break;
+			}
+			else state = 0;
+		}
+
+		firstTime = true;
+		return response;
+	}
+
 	
 	/**
 	 * 

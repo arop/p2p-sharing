@@ -47,21 +47,6 @@ public class Server {
 		return user;
 	}
 
-	public User loginFacebook(String username, long fb_id, String address, int port){
-		User user;
-		if ((user = user_db.getUserFacebookByFacebookId(fb_id)) == null){
-			user_db.registerUserFacebook(username, fb_id, address, port);
-			if ((user = user_db.getUserFacebookByFacebookId(fb_id)) == null){
-				return null;
-			}
-			return user;
-		}
-		System.out.println("Login successful");
-		return user;
-	}
-	
-	
-	
 	public String getAllUsersEssencials(){
 		ArrayList<User> users = user_db.getAllUsers(false);
 		Gson gson = new Gson();
@@ -85,10 +70,6 @@ public class Server {
 
 	public void updateUserAddress(int user_id, String address){
 		user_db.updateLastIp(user_id, address);		
-	}
-	
-	public void updateUserPort(int user_id, int port){
-		user_db.updateUserPort(user_id, port);		
 	}
 
 	/**
