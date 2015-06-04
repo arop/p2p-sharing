@@ -121,8 +121,8 @@ public class ConnectionListenerServer extends Thread{
 			int[] users_ids = gson.fromJson(Tools.getBody(message), arrayOfIntsType);
 
 			if (this.mainThread.addFriendsToUser(user_id, users_ids))
-				return Tools.generateGetAllUsersMessage("OK");
-			return Tools.generateGetAllUsersMessage("NOTOK");
+				return Tools.generateMessage("OK");
+			return Tools.generateMessage("NOTOK");
 
 		case "GETFRIENDS": 
 			//ADDFRIENDS <Version> <User id> <CRLF><CRLF> JSON of int[] users ids
@@ -154,7 +154,7 @@ public class ConnectionListenerServer extends Thread{
 				return Tools.generateJsonMessage("OK",gson.toJson(user));
 			}
 
-			return Tools.generateGetAllUsersMessage("NOTOK");
+			return Tools.generateMessage("NOTOK");
 			
 		case "LOGINFACEBOOK":
 			String[] loginFBparts = Tools.getBody(message).split("#");
@@ -184,8 +184,8 @@ public class ConnectionListenerServer extends Thread{
 			int temp = Integer.parseInt(registerParts[3]);
 
 			if(mainThread.registerUser(registerParts[0],registerParts[1],registerParts[2],sourceAddress,temp))
-				return Tools.generateGetAllUsersMessage("OK");
-			return Tools.generateGetAllUsersMessage("NOTOK");
+				return Tools.generateMessage("OK");
+			return Tools.generateMessage("NOTOK");
 
 		case "GETUSER":
 			User u = mainThread.user_db.getUserById(Integer.parseInt(Tools.getBody(message)));

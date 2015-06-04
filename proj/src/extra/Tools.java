@@ -5,11 +5,12 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.UnknownHostException;
-import java.nio.charset.StandardCharsets;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.swing.JFileChooser;
+
+import com.google.gson.Gson;
 
 import user.User;
 import main.Chunk;
@@ -57,18 +58,24 @@ public abstract class Tools {
 	 * @return
 	 */
 	public static String generateMessage(String type, Chunk chunk) {
+		Gson gson = new Gson();
 		String message = null;
 		switch(type) {
 		case "PUTCHUNK":
+			//message = "PUTCHUNK " + Tools.getVersion() + " " + chunk.getFileId() +  " "  + chunk.getChunkNo() + " " + chunk.getReplicationDeg() 
+			//+ "\r\n\r\n" + (new String(chunk.getByteArray(),StandardCharsets.ISO_8859_1)) + "\r\n\r\n";
+			
 			message = "PUTCHUNK " + Tools.getVersion() + " " + chunk.getFileId() +  " "  + chunk.getChunkNo() + " " + chunk.getReplicationDeg() 
-			+ "\r\n\r\n" + (new String(chunk.getByteArray(),StandardCharsets.ISO_8859_1)) + "\r\n\r\n";
+					+ "\r\n\r\n" + gson.toJson(chunk) + "\r\n\r\n";
 			break;
 		case "STORED":
 			message = "STORED " +  Tools.getVersion() + " " +  chunk.getFileId() +  " "  + chunk.getChunkNo() + "\r\n\r\n"; 
 			break;	
 		case "CHUNK": 
+			//message =  "CHUNK "  + Tools.getVersion() + " " +  chunk.getFileId() +  " "  + chunk.getChunkNo() + "\r\n\r\n" +
+				//	(new String(chunk.getByteArray(),StandardCharsets.ISO_8859_1))+ "\r\n\r\n";
 			message =  "CHUNK "  + Tools.getVersion() + " " +  chunk.getFileId() +  " "  + chunk.getChunkNo() + "\r\n\r\n" +
-					(new String(chunk.getByteArray(),StandardCharsets.ISO_8859_1))+ "\r\n\r\n"; 
+					gson.toJson(chunk)+ "\r\n\r\n";
 			break;		
 		case "REMOVED":
 			message = "REMOVED " +  Tools.getVersion() + " " +  chunk.getFileId() +  " "  + chunk.getChunkNo() + "\r\n\r\n"; 
@@ -109,7 +116,7 @@ public abstract class Tools {
 	 * @param type
 	 * @return
 	 */
-	public static String generateGetAllUsersMessage(String type){
+	public static String generateMessage(String type){
 		String message = null;
 		switch(type) {
 		case "GETALLUSERS":
@@ -268,7 +275,13 @@ public abstract class Tools {
 		int index = msg.indexOf("\r\n\r\n") + 4;
 		if (index < 0)
 			return null;
-		return msg.substring(index);
+		
+		int index2 = msg.substring(index).indexOf("\r\n\r\n");
+		
+		if(index2 < 0)
+			return msg.substring(index);
+		
+		return msg.substring(index,index2+index);
 	}
 
 	/**
