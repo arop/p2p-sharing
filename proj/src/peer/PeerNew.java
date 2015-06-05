@@ -456,8 +456,10 @@ public class PeerNew {
 			dir3.mkdir();
 
 		File dir4 = new File("files\\backups");
-		if(!dir4.exists())
+		if(!dir4.exists()) {
 			dir4.mkdir();
+			FileManagement.hideFile("files\\backups");
+		}
 
 		File dir5 = new File("files\\shared-with-me");
 		if(!dir5.exists())
@@ -943,4 +945,21 @@ public class PeerNew {
 
 		return total;
 	}
+
+	/*public Chunk mostRedundant() {
+		Chunk res = null;
+		int last = -9999;
+		
+		for (Map.Entry<Chunk, Integer> entry : degreeListStored.entrySet()) {
+			if(degreeListStored.size() == 1) {
+				res = entry.getKey();
+			}
+
+			if(entry.getValue() - entry.getKey().getReplicationDeg() > last) {
+				last = entry.getValue()-entry.getKey().getReplicationDeg();
+				res = entry.getKey();
+			}
+		}
+		return res;
+	}*/
 }
