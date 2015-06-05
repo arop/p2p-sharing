@@ -67,6 +67,9 @@ public class GUI extends JFrame {
 			@Override	
 			public void actionPerformed(ActionEvent e){
 				generalInfo.setNumBackupFiles(mainThread.getBackupList().size());
+				generalInfo.setNumberOfFriends(mainThread.getFriends().size());
+				generalInfo.setSizeBackedUp(mainThread.getFriends().size());
+				generalInfo.setNumberOnlineFriends(mainThread.getNumberOfFriendsOnline());
 			}
 		});
 
