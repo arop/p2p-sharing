@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
 import java.security.PrivilegedActionException;
 
@@ -20,6 +21,7 @@ import com.google.gson.Gson;
 
 import main.Chunk;
 import extra.FileManagement;
+import extra.StateMachine;
 import extra.Tools;
 
 public class ConnectionListenerPeer extends Thread {
@@ -42,38 +44,18 @@ public class ConnectionListenerPeer extends Thread {
 					System.out.println("Failed to open socket! Port: " + mainThread.getLocalUser().getPort());
 				}
 				else {
-					int state = 0;
-					boolean firstTime = true;
-
 					sslSocket = (SSLSocket)sslServerSocket.accept();
 
 					PrintWriter out = new PrintWriter(sslSocket.getOutputStream(), true); //vai responder por aqui
 					BufferedReader in = new BufferedReader(new InputStreamReader(sslSocket.getInputStream())); //lê daqui
 
-					String finalString = "";
-					char nextChar = 0;
-
-					while(true) {		
-						nextChar = (char) in.read();
-						finalString += nextChar;
-
-						if(nextChar == '\r' && (state == 0 || state == 2)) {
-							state++;
-						}
-						else if(nextChar == '\n' && state == 1) {
-							state++;
-						}
-						else if(nextChar == '\n' && state == 3) {
-							if(finalString.contains("PUTCHUNK") && firstTime) {
-								firstTime = false;
-								state = 0;
-							}
-							else break;
-						}
-						else state = 0;
-					}
-
-					firstTime = true;
+					
+					//GET RESPONSE 
+//					ArrayList<String> messages = new ArrayList<String>();
+//					messages.add("PUTCHUNK");
+//					messages.add("BACKUPFILE");
+				
+					String finalString = new StateMachine().stateMachine(in);
 
 					System.out.println("message received: \n	" + Tools.getHead(finalString));
 					String origin_ip = sslSocket.getInetAddress().getHostAddress();
@@ -150,12 +132,14 @@ public class ConnectionListenerPeer extends Thread {
 
 		case "PUTCHUNK":
 			Gson g = new Gson();
-			Chunk temp = g.fromJson(Tools.getBody(message), Chunk.class);
-			//Chunk temp = new Chunk(Tools.getBody(message).getBytes(StandardCharsets.ISO_8859_1));
-
+			//Chunk temp = g.fromJson(Tools.getBody(message), Chunk.class);
+			Chunk temp = new Chunk(Tools.getBody(message).getBytes(StandardCharsets.ISO_8859_1));
+			splitMessage(temp,Tools.getHead(message));
+			
 			if(!mainThread.hasChunk(temp.getFileId(), temp.getChunkNo())) {
 				if(Tools.folderSize(new File("files\\backups")) + temp.getByteArray().length-1 <= Tools.getFolderSize() ) {
 					FileManagement.materializeChunk(temp);
+					System.out.println("LENGTH " + temp.getByteArray().length);
 					mainThread.clearChunkList();
 					mainThread.loadChunkList();
 					return Tools.generateMessage("STORED", temp);

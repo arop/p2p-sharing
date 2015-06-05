@@ -19,6 +19,7 @@ import com.google.gson.Gson;
 
 import user.User;
 import database.UserDatabase;
+import extra.StateMachine;
 import extra.Tools;
 
 public class Server {
@@ -26,7 +27,7 @@ public class Server {
 	UserDatabase user_db;
 
 	public Server(){
-		user_db = new UserDatabase();		
+		user_db = new UserDatabase();	
 	}
 
 	public boolean registerUser(String username, String password, String email, String ip, int port){
@@ -103,10 +104,12 @@ public class Server {
 			out.println(msg);
 
 			//GET RESPONSE 
-			response = in.readLine();
-			response += in.readLine(); 				//TODO (isto está assim hardcoded pq o 
-			response += "\r\n\r\n"+in.readLine(); 	//readLine lê até ao \r\n apenas)
+//			response = in.readLine();
+//			response += in.readLine(); 				//TODO (isto está assim hardcoded pq o 
+//			response += "\r\n\r\n"+in.readLine(); 	//readLine lê até ao \r\n apenas)
 
+			response = new StateMachine().stateMachine(in);
+			
 			// Closing the Streams and the Socket
 			out.close();
 			in.close();
