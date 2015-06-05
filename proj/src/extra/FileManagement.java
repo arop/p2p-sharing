@@ -13,6 +13,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Map;
 
 import main.Chunk;
@@ -168,6 +169,8 @@ public abstract class FileManagement {
 		File ofile = new File("files\\restores\\backup_" + filename);
 		FileOutputStream out_stream;
 
+		Collections.sort(chunks, new Chunk());
+		
 		try {
 			out_stream = new FileOutputStream(ofile,true);
 			for (Chunk chunk : chunks) {
@@ -192,7 +195,7 @@ public abstract class FileManagement {
 
 		for (Map.Entry<Chunk, Integer> entry : m.entrySet()) {
 			String s = entry.getKey().getFileId() + "?" + entry.getKey().getChunkNo() + "?" + entry.getKey().getReplicationDeg() + "?" + entry.getValue();
-			for(Integer i: entry.getKey().getUserIds())
+			for(Integer i: entry.getKey().getUserIDs())
 				s += "?"+i;
 			f0.println(s);
 		}

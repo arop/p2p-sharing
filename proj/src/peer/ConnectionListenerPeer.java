@@ -6,7 +6,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.security.KeyStore;
 import java.security.PrivilegedActionException;
 
@@ -16,9 +15,6 @@ import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.TrustManagerFactory;
-
-
-
 
 import main.Chunk;
 import extra.FileManagement;
@@ -38,7 +34,6 @@ public class ConnectionListenerPeer extends Thread {
 		SSLSocket sslSocket = null ;
 
 		while(true){
-
 			try {
 				sslServerSocket = getServerSocket(this.mainThread.getLocalUser().getPort());
 				if (sslServerSocket == null){
@@ -46,7 +41,7 @@ public class ConnectionListenerPeer extends Thread {
 				}
 				else {
 					sslSocket = (SSLSocket)sslServerSocket.accept();
-					
+
 					BufferedOutputStream out = new BufferedOutputStream(sslSocket.getOutputStream(), Tools.getPacketSize()+1000); //vai responder por aqui
 					BufferedReader in = new BufferedReader(new InputStreamReader(sslSocket.getInputStream())); //lê daqui
 
@@ -62,9 +57,7 @@ public class ConnectionListenerPeer extends Thread {
 					out.flush();
 					System.out.println("Answer sent!\n	" + Tools.getHead(responseMessage));
 					// Close the streams and the socket
-					
-					
-					
+
 					out.close();
 					in.close();	
 					sslSocket.close();
@@ -77,7 +70,6 @@ public class ConnectionListenerPeer extends Thread {
 				System.out.println(" Priv exp --- " + priexp.getMessage());
 				System.out.println(" Exception occurred .... " +exp);
 				exp.printStackTrace();
-        
 			}
 		}
 	}
@@ -123,13 +115,12 @@ public class ConnectionListenerPeer extends Thread {
 			return Tools.generateMessage("OK");
 
 		case "PUTCHUNK":
-			Chunk temp = new Chunk(Tools.getBody(message).getBytes());
 			String msgBody = Tools.getBody(message);
 			byte[] lineDecoded = Tools.decode(msgBody);
-			
+
 			Chunk temp = new Chunk(lineDecoded);
 			splitMessage(temp,Tools.getHead(message));
-			
+
 			if(!mainThread.hasChunk(temp.getFileId(), temp.getChunkNo())) {
 				if(Tools.folderSize(new File("files\\backups")) + temp.getByteArray().length-1 <= Tools.getFolderSize() ) {
 					FileManagement.materializeChunk(temp);
@@ -159,7 +150,6 @@ public class ConnectionListenerPeer extends Thread {
 
 		case "GETCHUNK":
 			//GETCHUNK <Version> <FileId> <ChunkNo> <CRLF><CRLF>
-
 			String fileId = messageHeadParts[2];
 			int chunkNo = Integer.parseInt(messageHeadParts[3]);
 
