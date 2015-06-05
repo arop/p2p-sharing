@@ -127,6 +127,7 @@ public abstract class FileManagement {
 		out.write(chunk.getByteArray());
 		out.flush();
 		out.close();
+		f.setReadOnly();
 	}
 
 	/**
