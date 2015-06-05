@@ -60,8 +60,11 @@ public class ConnectionListenerServer extends Thread{
 					PrintWriter out = new PrintWriter(sslSocket.getOutputStream(), true); //vai responder por aqui
 					BufferedReader in = new BufferedReader(new InputStreamReader(sslSocket.getInputStream())); //lê daqui
 
+					
+					//GET RESPONSE 
+					
 					String inputLine = new StateMachine().stateMachine(in);
-				
+
 					System.out.println("message received: "+Tools.getHead(inputLine));
 					String origin_ip = sslSocket.getInetAddress().getHostAddress();
 					//PROCESS RECEIVED MESSAGE
@@ -70,7 +73,7 @@ public class ConnectionListenerServer extends Thread{
 
 					//SEND RESPONSE
 					out.println(responseMessage);
-					//System.out.println("Answer sent!");
+					System.out.println("Answer sent!\n	" + Tools.getHead(responseMessage));
 					// Close the streams and the socket
 					out.close();
 					in.close();
@@ -85,11 +88,6 @@ public class ConnectionListenerServer extends Thread{
 				System.out.println(" Exception occurred .... " +exp);
 				exp.printStackTrace();
 
-				try {
-					sslServerSocket.close();
-				} catch (IOException e) {
-					System.out.println("erro no while read server");
-				}
 			}
 		}
 	}
@@ -153,6 +151,22 @@ public class ConnectionListenerServer extends Thread{
 			}
 
 			return Tools.generateMessage("NOTOK");
+		case "LOGINFACEBOOK":
+
+			String[] loginFBparts = Tools.getBody(message).split("#");
+
+			System.out.println("Username: " + loginFBparts[1]);
+			System.out.println("fb id: " + loginFBparts[0]);
+			int portUser = Integer.parseInt(loginFBparts[2]);
+			User userFb = null;
+
+			if( (userFb = mainThread.loginFacebook(loginFBparts[1], Long.parseLong(loginFBparts[0]), sourceAddress, portUser)) != null){
+				mainThread.updateUserAddress(userFb.getId(), sourceAddress);
+				mainThread.updateUserPort(userFb.getId(), portUser);
+				sendPendingMessages(userFb);
+				return Tools.generateJsonMessage("OK",gson.toJson(userFb));
+			}
+			return Tools.generateMessage("NOTOK");
 
 		case "REGISTER":
 			String[] registerParts = Tools.getBody(message).split(" ");
@@ -180,7 +194,7 @@ public class ConnectionListenerServer extends Thread{
 		default:
 			break;				
 		}
-		return null;
+		return Tools.generateMessage("NOTOK");
 	}
 
 	private void sendPendingMessages(User user) {

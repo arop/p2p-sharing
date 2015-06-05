@@ -5,13 +5,13 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.UnknownHostException;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
+import org.apache.commons.codec.binary.Base64;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.swing.JFileChooser;
+
+import org.apache.commons.lang.ArrayUtils;
 
 import com.google.gson.Gson;
 
@@ -24,7 +24,7 @@ import main.Chunk;
  *
  */
 public abstract class Tools {
-	static int packetSize = 64000;	
+	static int packetSize = 15000;	
 	static long folderSize = 10000000L;
 	static boolean debug = true;
 	static String version = "1.0";	
@@ -82,7 +82,6 @@ public abstract class Tools {
 	 * @return
 	 */
 	public static String generateMessage(String type, Chunk chunk) {
-		String body = new String(chunk.getByteArray());
 		String message = null;
 		switch(type) {
 		case "PUTCHUNK":
@@ -97,7 +96,7 @@ public abstract class Tools {
 			break;	
 		case "CHUNK": 
 			message =  "CHUNK "  +  String.valueOf(body.length()) + " " +  chunk.getFileId() +  " "  + chunk.getChunkNo() + " \r\n\r\n" +
-					(body)+ "\r\n\r\n";
+					body+ "\r\n\r\n";
 //			message =  "CHUNK "  + Tools.getVersion() + " " +  chunk.getFileId() +  " "  + chunk.getChunkNo() + "\r\n\r\n" +
 //					gson.toJson(chunk)+ "\r\n\r\n";
 			break;		
@@ -351,6 +350,33 @@ public abstract class Tools {
 	public static String[] splitFileExtension(String fileName){
 		return fileName.split("\\.(?=[^\\.]+$)");
 	}
+	
+	public static String encode(byte[] bytes){
+		
+		//alternative 1 -> try encoding base64 (sun)
+		sun.misc.BASE64Encoder enc = new sun.misc.BASE64Encoder();
+		return enc.encode(bytes);
+		
+		//alternative 2 -> simple string conversion
+		//return new String(bytes); 
+	}
+	
+	public static byte[] decode(String bytes){
+		
+		//alternative 1 -> try encoding base64 (sun)
+		sun.misc.BASE64Decoder dec = new sun.misc.BASE64Decoder();
+		try {
+			return dec.decodeBuffer(bytes);
+		} catch (IOException e) {
+			System.out.println("error decoding string to byte[].");
+			e.printStackTrace();
+			return null;
+		}
+		
+		//alternative 2 -> simple string conversion
+		//return bytes.getBytes();
+	}
+	
 	
 	
 }

@@ -1,5 +1,6 @@
 package peer;
 
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -14,6 +15,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivilegedActionException;
 import java.security.Security;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -158,21 +160,27 @@ public class PeerNew {
 			loginFrame.dispose();
 
 			if (!loginState.equals("success")){
-
+				
+				System.out.println("login not success??");
+				
 				if (this.loginFacebook(Integer.parseInt(loginState.split("-")[1]))){
 					break;
 				}
 			}
-			else break;
+			else{
+				System.out.println("login success!!");
+				break;
+			}
 		}
-
+		
+		System.out.println("out of while cycle");
 
 		this.friends = new ArrayList<User>();//initialize list
 
 		this.getFriendsFromServer(); //update list with values from server
 		PeerNew thisThread = this;
 
-		NativeInterface.open(); // not sure what else may be needed for this
+		//NativeInterface.open(); // not sure what else may be needed for this
 		
 			SwingUtilities.invokeAndWait(new Runnable() {
 				public void run() {
@@ -213,32 +221,25 @@ public class PeerNew {
 	}
 
 	public boolean loginFacebook(int port) {
-		System.out.println("1");
+		
 		FacebookTest fb = new FacebookTest();
 		String json = fb.getJsonUser();
 		JsonElement jelement = new JsonParser().parse(json);
-		System.out.println("2");
 		JsonObject  jobject = jelement.getAsJsonObject();
 
 		String id = jobject.get("id").toString();
 		id = id.substring(1, id.length()-1); // removes double quotes 
 
-		System.out.println("3");
-
 		String name = jobject.get("name").toString();
 		name = name.substring(1, name.length()-1); // removes double quotes 
 
-		System.out.println("4");
 		String messagebody = id + "#" + name + "#" + port;
 		String response = this.sendMessage(Tools.generateJsonMessage("LOGINFACEBOOK",messagebody), serverAddress, serverPort,0);
-		System.out.println("5");
 		if(!Tools.getType(response).equals("OK"))
 			return false;
-		System.out.println("6");
 		Gson g = new Gson();
 		User u = g.fromJson(Tools.getBody(response), User.class);
-		setLocalUser(u);
-		System.out.println("7");
+		setLocalUser(u);;
 		return true;
 	}
 
@@ -432,33 +433,34 @@ public class PeerNew {
 	 * @param port_dest
 	 * @return response from other peer/server
 	 */
-	public String sendMessage(String msg, String ip_dest, int port_dest, int connection_try_number){
+	public synchronized String sendMessage(String msg, String ip_dest, int port_dest, int connection_try_number){
 		System.out.println("Sending message: " + Tools.getHead(msg));
-		{
-			// Registering the JSSE provider
-			Security.addProvider(new Provider());
-		}
 
-		int timeout = 60000; //timeout in miliseconds
+
+		int timeout = 15000; //timeout in miliseconds
 
 		//SSLSocketFactory sslsocketfactory = (SSLSocketFactory)SSLSocketFactory.getDefault();
 		SSLSocket sslSocket;
 
-		PrintWriter out = null;
+		BufferedOutputStream out = null;
 		BufferedReader in = null;
 		String response = null;
 
 		try {
 			sslSocket = getSocketConnection(ip_dest, port_dest);
+			
+			
 			//sslSocket = (SSLSocket)sslsocketfactory.createSocket(ip_dest,port_dest);
 			sslSocket.setSoTimeout(timeout);
 
 			// Initializing the streams for Communication with the Server
-			out = new PrintWriter(sslSocket.getOutputStream(), true);
+			out = new BufferedOutputStream(sslSocket.getOutputStream(), Tools.getPacketSize()+1000);
 			in = new BufferedReader(new InputStreamReader(sslSocket.getInputStream()));
 
 			//SEND MESSAGE
-			out.println(msg);
+			out.write(msg.getBytes());
+			out.flush();
+			//out.println(msg);
 
 			response = new StateMachine().stateMachine(in);
 
@@ -472,6 +474,11 @@ public class PeerNew {
 				//e.printStackTrace();
 				return null;
 			}
+			//e.printStackTrace();
+			PrivilegedActionException priexp = new PrivilegedActionException(e);
+			System.out.println(" Priv exp --- " + priexp.getMessage());
+			System.out.println(" Exception occurred .... " +e);
+			
 			System.out.println("try: "+connection_try_number);
 			return this.sendMessage(msg, ip_dest, port_dest,connection_try_number+1);
 		}
@@ -489,6 +496,7 @@ public class PeerNew {
 			TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
 			tmf.init(keyStore);
 			SSLContext ctx = SSLContext.getInstance("SSL");
+			
 			ctx.init(null, tmf.getTrustManagers(), null);
 			SSLSocketFactory factory = ctx.getSocketFactory();
 
@@ -867,9 +875,12 @@ public class PeerNew {
 				User sonserina = getUserFromServer(temp.get(i));
 				String response = sendMessage(Tools.generateGetChunkMessage("GETCHUNK", fileId,chunk.getChunkNo()), sonserina.getIp(), sonserina.getPort(),0);
 
-				if(response != null){
-					//gotThisChunk = true;
-					processChunkMessage(response);
+				if(response != null ){
+					if (Tools.getType(response).equals("CHUNK")){
+						//gotThisChunk = true;
+						processChunkMessage(response);
+					}
+					
 				}
 			}
 //
@@ -892,11 +903,12 @@ public class PeerNew {
 		if(message == null) {
 			System.out.println("Chunk null. returning");
 		}
-
-		Gson g = new Gson();
+	
+		String msgBody = Tools.getBody(message);
+		byte[] lineDecoded = Tools.decode(msgBody);
 		
-		Chunk chunkRestored = new Chunk(Tools.getBody(message).getBytes());
-//		Chunk chunkRestored = g.fromJson(Tools.getBody(message), Chunk.class);
+		Chunk chunkRestored = new Chunk(lineDecoded);
+		//Chunk chunkRestored = g.fromJson(Tools.getBody(message), Chunk.class);
 		con_listener.splitMessage(chunkRestored,Tools.getHead(message));
 		//so guarda o chunk se ainda nao o tiver
 		if(!alreadyExists(chunkRestored.getFileId(), chunkRestored.getChunkNo())) {
