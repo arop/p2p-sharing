@@ -1,12 +1,12 @@
 package peer;
 
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
 import java.security.PrivilegedActionException;
 
@@ -17,7 +17,8 @@ import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.TrustManagerFactory;
 
-import com.google.gson.Gson;
+
+
 
 import main.Chunk;
 import extra.FileManagement;
@@ -45,8 +46,8 @@ public class ConnectionListenerPeer extends Thread {
 				}
 				else {
 					sslSocket = (SSLSocket)sslServerSocket.accept();
-
-					PrintWriter out = new PrintWriter(sslSocket.getOutputStream(), true); //vai responder por aqui
+					
+					BufferedOutputStream out = new BufferedOutputStream(sslSocket.getOutputStream(), Tools.getPacketSize()+1000); //vai responder por aqui
 					BufferedReader in = new BufferedReader(new InputStreamReader(sslSocket.getInputStream())); //lê daqui
 
 					String finalString = new StateMachine().stateMachine(in);
@@ -57,11 +58,15 @@ public class ConnectionListenerPeer extends Thread {
 					System.out.println("	from: "+origin_ip);
 					String responseMessage = this.parseReceivedMessage(finalString);
 					//SEND RESPONSE
-					out.println(responseMessage);
-					System.out.println("Answer sent!");
+					out.write(responseMessage.getBytes());
+					out.flush();
+					System.out.println("Answer sent!\n	" + Tools.getHead(responseMessage));
 					// Close the streams and the socket
+					
+					
+					
 					out.close();
-					in.close();
+					in.close();	
 					sslSocket.close();
 					sslServerSocket.close();	
 				}
@@ -71,15 +76,8 @@ public class ConnectionListenerPeer extends Thread {
 				PrivilegedActionException priexp = new PrivilegedActionException(exp);
 				System.out.println(" Priv exp --- " + priexp.getMessage());
 				System.out.println(" Exception occurred .... " +exp);
-				//exp.printStackTrace();
-
-				try {
-					sslSocket.close();
-					sslServerSocket.close();
-				} catch (IOException e) {
-					System.out.println("erro no while read server");
-					//e.printStackTrace();
-				}	        
+				exp.printStackTrace();
+        
 			}
 		}
 	}
@@ -126,6 +124,10 @@ public class ConnectionListenerPeer extends Thread {
 
 		case "PUTCHUNK":
 			Chunk temp = new Chunk(Tools.getBody(message).getBytes());
+			String msgBody = Tools.getBody(message);
+			byte[] lineDecoded = Tools.decode(msgBody);
+			
+			Chunk temp = new Chunk(lineDecoded);
 			splitMessage(temp,Tools.getHead(message));
 			
 			if(!mainThread.hasChunk(temp.getFileId(), temp.getChunkNo())) {
