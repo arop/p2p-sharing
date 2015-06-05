@@ -58,17 +58,17 @@ public class PeerNew {
 
 	ArrayList<User> friends;
 
-	private Map <String, String> backupList;
-	private Map <String, Integer> backupList2;
+	private Map <String, String> backupList; //filename - fileId 
+	private Map <String, Integer> backupList2; // filename - repDegree (actual)
 
-	private ArrayList<Chunk> chunklist;
+	private ArrayList<Chunk> chunklist; // é os chunks q ele guardou
 
-	private ArrayList<Chunk> chunksReceived;
+	private ArrayList<Chunk> chunksReceived; // isto é lixo
 	private int chunksToReceive; 
 	private String fileToRecover;
 
 	ConnectionListenerPeer con_listener;
-	private Map<String,ArrayList<Integer>> filesUserID;
+	private Map<String,ArrayList<Integer>> filesUserID; //filename - pessoas que têm pelo menos um chunk desse file
 
 	private LoginFrame loginFrame;
 
@@ -532,6 +532,14 @@ public class PeerNew {
 		}
 	}
 
+	public ArrayList<Chunk> getChunklist() {
+		return chunklist;
+	}
+
+	public void setChunklist(ArrayList<Chunk> chunklist) {
+		this.chunklist = chunklist;
+	}
+
 	/**
 	 * Select only the files that are chunks
 	 * @param files
@@ -772,6 +780,12 @@ public class PeerNew {
 
 		ArrayList<Integer> usedIndexes = new ArrayList<Integer>();
 		for (Chunk chunk : chunks) {
+
+
+			System.out.println(this.localUser.getId());
+			chunk.setUserWhoSent(this.localUser.getId());
+			//	chunk.setFileName(fileName);
+
 			usedIndexes.clear();
 			String msg = Tools.generateMessage("PUTCHUNK", chunk);
 
@@ -946,20 +960,54 @@ public class PeerNew {
 		return total;
 	}
 
-	/*public Chunk mostRedundant() {
-		Chunk res = null;
-		int last = -9999;
-		
-		for (Map.Entry<Chunk, Integer> entry : degreeListStored.entrySet()) {
-			if(degreeListStored.size() == 1) {
-				res = entry.getKey();
-			}
+	public void reclaimSpace(Double sizeToRemove) {
+		Random randomicidade = new Random();
 
-			if(entry.getValue() - entry.getKey().getReplicationDeg() > last) {
-				last = entry.getValue()-entry.getKey().getReplicationDeg();
-				res = entry.getKey();
+		Tools.setFolderSize(sizeToRemove.intValue());
+
+		while(Tools.folderSize(new File("files\\backups")) > Tools.getFolderSize() ){
+			int indice = randomicidade.nextInt(chunklist.size());
+
+			Chunk removedChunke = chunklist.remove(indice);
+
+			String fileId = removedChunke.getFileId();
+			int chunkNo = removedChunke.getChunkNo();
+			
+			String filename = removedChunke.getFileId() + "_chunk_" + removedChunke.getChunkNo();
+
+			File f = new File("files\\backups\\"+filename);
+			System.gc();
+			f.delete(); 
+
+			try (BufferedReader br = new BufferedReader(new FileReader("files\\lists\\stored_list.txt"))) {
+				String line;
+				while ((line = br.readLine()) != null) {
+					String[] parts  = line.split("\\?");
+					
+					System.out.println(parts[1]);
+					System.out.println(parts[2]);
+					System.out.println(parts[3]);
+
+					
+					if(parts[1].equals(fileId) && Integer.parseInt(parts[2])==chunkNo) {
+						User temp = getUserFromServer(Integer.parseInt(parts[3]));
+						if(temp != null) 
+							sendMessage(Tools.generateMessage("REMOVED",removedChunke),temp.getIp(),temp.getPort(),0);
+						break;
+					}
+				}
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
-		}
-		return res;
-	}*/
+		}		
+	}
+
+
+	public void saveStoreChunkInfo(Chunk temp) throws IOException {
+		FileManagement.addToStoredListFile(temp.getFileName(),temp.getFileId(),temp.getChunkNo(),temp.getUserWhoSent());
+	}
 }

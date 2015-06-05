@@ -151,6 +151,40 @@ public abstract class FileManagement {
 	}
 
 	/**
+	 * Add file to the stored list
+	 * @param string
+	 * @param fId
+	 * @param numberOfChunks
+	 * @param usersID 
+	 * @throws IOException 
+	 */
+	public static void addToStoredListFile(String fname, String fId, int chunkNo, int ownerId) throws IOException {
+		File file=new File("files\\lists\\stored_list.txt");
+
+		if(!file.exists()){
+			file.createNewFile();
+		}
+
+		FileWriter fw = new FileWriter(file,true);
+		BufferedWriter bw = new BufferedWriter(fw);
+		PrintWriter pw = new PrintWriter(bw);
+		pw.println(fname + "?" +  fId + "?" + chunkNo + "?" + ownerId);
+		pw.close();
+
+	}
+	
+	public static int findOwnerIdFromChunk(Chunk c) {
+		
+		
+		
+		
+		return 0;
+		
+		
+	}
+
+
+	/**
 	 * Reads a physical chunk, and creates a chunk with it
 	 * @param fileId
 	 * @param chunkNo
@@ -163,7 +197,7 @@ public abstract class FileManagement {
 		byte[] fileBytes = new byte[(int) file.length()];
 		in_stream.read(fileBytes, 0,(int)  file.length());	
 		in_stream.close();
-		return new Chunk(fileBytes,chunkNo, 1, fileId);
+		return new Chunk(fileBytes,chunkNo,1,fileId);
 	}
 
 	/**
