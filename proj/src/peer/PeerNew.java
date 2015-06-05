@@ -195,6 +195,9 @@ public class PeerNew {
 	}
 
 	public boolean login(String username, String password) {
+		if(username == null || password == null || username.length() == 0 || password.length() == 0)
+			return false;
+		
 		String messagebody = username + " " + password;
 		String response = this.sendMessage(Tools.generateJsonMessage("LOGIN",messagebody), serverAddress, serverPort,0);
 		if(!Tools.getType(response).equals("OK"))

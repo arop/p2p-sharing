@@ -55,14 +55,15 @@ public class LoginFrame extends JFrame {
 		JSpinner portFacebook = new JSpinner();
 		portFacebook.setPreferredSize(new Dimension(60,25));
 		portFacebook.setValue(5599);
-		
-		
+
 		loginButton.addActionListener(new ActionListener()
 		{
 			@Override	
 			public void actionPerformed(ActionEvent e){
-				if(mainThread.login(username.getText(),new String(password.getPassword()))) {
-					setState("success"); 
+				if(username.getText()!= null && password.getPassword()!= null) {
+					if(mainThread.login(username.getText(),new String(password.getPassword()))) {
+						setState("success"); 
+					}
 				}
 			}
 		});
@@ -75,26 +76,14 @@ public class LoginFrame extends JFrame {
 				registerForm.setVisible(true);
 			}
 		});
-		
+
 		loginFacebookButton.addActionListener(new ActionListener()
 		{
 			@Override	
 			public void actionPerformed(ActionEvent e){
-				/*Runnable run = new Runnable() {
-
-					@Override
-					public void run() {
-						if(mainThread.loginFacebook((Integer) portFacebook.getValue())) {
-							setSuccess(true); 
-						}
-					};
-				};
-				run.run();*/
 				setState("facebook-"+portFacebook.getValue()); 
 			}
 		});
-
-
 
 		JPanel loginForm = new JPanel();
 
@@ -108,13 +97,12 @@ public class LoginFrame extends JFrame {
 		loginForm.add(password);
 		loginForm.add(loginButton);
 		loginForm.add(registerButton);
-		
+
 		JPanel panelFacebook = new JPanel();
 		panelFacebook.add(loginFacebookButton, BorderLayout.WEST);
 		panelFacebook.add(portFacebook, BorderLayout.EAST);
-		
-		loginForm.add(panelFacebook);
 
+		loginForm.add(panelFacebook);
 
 		this.add(loginForm);
 
@@ -130,7 +118,6 @@ public class LoginFrame extends JFrame {
 	}
 
 	public static void main(String[] args) {
-
 		EventQueue.invokeLater(new Runnable() {
 
 			@Override
