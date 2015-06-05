@@ -9,6 +9,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
@@ -117,9 +120,10 @@ public abstract class FileManagement {
 	 * @throws IOException
 	 */
 	public static void materializeChunk(Chunk chunk) throws IOException {
-		FileOutputStream out;
 		String tempname = chunk.getFileId() + "_chunk_" + chunk.getChunkNo();
-		out = new FileOutputStream(new File("files\\backups\\" + tempname));
+		File f = new File("files\\backups\\" + tempname);
+		FileOutputStream out;
+		out = new FileOutputStream(f);
 		out.write(chunk.getByteArray());
 		out.flush();
 		out.close();
@@ -170,7 +174,7 @@ public abstract class FileManagement {
 		FileOutputStream out_stream;
 
 		Collections.sort(chunks, new Chunk());
-		
+
 		try {
 			out_stream = new FileOutputStream(ofile,true);
 			for (Chunk chunk : chunks) {
@@ -228,5 +232,14 @@ public abstract class FileManagement {
 	public static boolean fileExists(String filePath) {
 		return (new File(filePath)).isFile();
 	}
+
+	public static void hideFile(String fileName){
+		try {
+			Path path = FileSystems.getDefault().getPath(fileName);
+			Files.setAttribute(path, "dos:hidden", true);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}	
 }
 
