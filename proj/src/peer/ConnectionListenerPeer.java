@@ -133,7 +133,7 @@ public class ConnectionListenerPeer extends Thread {
 		case "PUTCHUNK":
 			Gson g = new Gson();
 			//Chunk temp = g.fromJson(Tools.getBody(message), Chunk.class);
-			Chunk temp = new Chunk(Tools.getBody(message).getBytes(StandardCharsets.ISO_8859_1));
+			Chunk temp = new Chunk(Tools.getBody(message).getBytes());
 			splitMessage(temp,Tools.getHead(message));
 			
 			if(!mainThread.hasChunk(temp.getFileId(), temp.getChunkNo())) {
