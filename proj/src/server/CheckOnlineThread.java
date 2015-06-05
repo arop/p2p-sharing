@@ -27,16 +27,20 @@ public class CheckOnlineThread extends Thread {
 		ArrayList<User> users = server.getdb().getAllUsers(false);
 
 		//clear online users
-		onlineUsers.clear();
+		//onlineUsers.clear();
 
+		ArrayList<User> onlineUsersTemp = new ArrayList<User>();
+		
 		for (User user : users) {
 			String msg = Tools.generateMessage("ISONLINE", user.getId());
 			String answer = server.sendMessage(msg, user.getIp(), user.getPort(),3); //dont try more than 1 time
+			
 			if (answer != null)
 				if (Tools.getType(answer).equals("OK")) {
-					onlineUsers.add(user);
+					onlineUsersTemp.add(user);
 				}
-		}		
+		}
+		onlineUsers = onlineUsersTemp;
 	}
 
 	/**

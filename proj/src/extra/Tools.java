@@ -82,7 +82,6 @@ public abstract class Tools {
 	 * @return
 	 */
 	public static String generateMessage(String type, Chunk chunk) {
-		Gson gson = new Gson();
 		String body = new String(chunk.getByteArray());
 		String message = null;
 		switch(type) {

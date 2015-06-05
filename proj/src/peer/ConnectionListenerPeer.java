@@ -49,12 +49,6 @@ public class ConnectionListenerPeer extends Thread {
 					PrintWriter out = new PrintWriter(sslSocket.getOutputStream(), true); //vai responder por aqui
 					BufferedReader in = new BufferedReader(new InputStreamReader(sslSocket.getInputStream())); //lê daqui
 
-					
-					//GET RESPONSE 
-//					ArrayList<String> messages = new ArrayList<String>();
-//					messages.add("PUTCHUNK");
-//					messages.add("BACKUPFILE");
-				
 					String finalString = new StateMachine().stateMachine(in);
 
 					System.out.println("message received: \n	" + Tools.getHead(finalString));
@@ -131,15 +125,12 @@ public class ConnectionListenerPeer extends Thread {
 			return Tools.generateMessage("OK");
 
 		case "PUTCHUNK":
-			Gson g = new Gson();
-			//Chunk temp = g.fromJson(Tools.getBody(message), Chunk.class);
 			Chunk temp = new Chunk(Tools.getBody(message).getBytes());
 			splitMessage(temp,Tools.getHead(message));
 			
 			if(!mainThread.hasChunk(temp.getFileId(), temp.getChunkNo())) {
 				if(Tools.folderSize(new File("files\\backups")) + temp.getByteArray().length-1 <= Tools.getFolderSize() ) {
 					FileManagement.materializeChunk(temp);
-					System.out.println("LENGTH " + temp.getByteArray().length);
 					mainThread.clearChunkList();
 					mainThread.loadChunkList();
 					return Tools.generateMessage("STORED", temp);
