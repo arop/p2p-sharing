@@ -6,19 +6,20 @@ import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JSpinner;
+import javax.swing.SpinnerNumberModel;
 
 import peer.PeerNew;
 import ui.deleteFileFrame.DeleteFilesWindow;
 import ui.restoreFrame.RestoreFilesWindow;
 import user.User;
 import extra.Tools;
-import friends.FriendCircle;
 
 public class GUI extends JFrame {
 	private static final long serialVersionUID = 1L;
@@ -43,7 +44,7 @@ public class GUI extends JFrame {
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		setResizable(false);
 
-		List<FriendCircle> circles = new ArrayList<FriendCircle>();
+		//List<FriendCircle> circles = new ArrayList<FriendCircle>();
 		/*circles.add(new FriendCircle("Circle 1", friendsList.subList(2, 6)));
         circles.add(new FriendCircle("Circle 2", friendsList.subList(13, 17)));
         circles.add(new FriendCircle("Circle 3", friendsList.subList(4, 7)));*/
@@ -54,11 +55,10 @@ public class GUI extends JFrame {
 		FriendsPanel friendsPanel = new FriendsPanel(mainThread);
 		friendshipsPanel.add(friendsPanel, BorderLayout.WEST);
 
-		CirclesPanel circlesPanel = new CirclesPanel(circles);
-		friendshipsPanel.add(circlesPanel, BorderLayout.EAST);
+		//CirclesPanel circlesPanel = new CirclesPanel(circles);
+		//friendshipsPanel.add(circlesPanel, BorderLayout.EAST);
 
-
-		this.add(generateButtonsPanel(100, 500), BorderLayout.WEST);
+		this.add(generateButtonsPanel(150, 500), BorderLayout.WEST);
 		this.add(friendshipsPanel, BorderLayout.EAST);
 		generalInfo = new GeneralInfo(100,500, mainThread);
 
@@ -81,6 +81,18 @@ public class GUI extends JFrame {
 
 		int buttonWidth = panelWidth;    	
 		int buttonHeight = 90;
+		
+		JPanel repDegreePanel = new JPanel();
+		
+		JLabel spinnerLabel = new JLabel("Replication Degree");
+		
+		SpinnerNumberModel spinnerModel = new SpinnerNumberModel(1, 1, 5, 1);  
+		JSpinner spinner = new JSpinner(spinnerModel);
+		
+		repDegreePanel.add(spinnerLabel,BorderLayout.WEST);
+		repDegreePanel.add(spinner,BorderLayout.EAST);
+		
+		panel.add(repDegreePanel);
 
 		JButton button = new JButton("Backup File");
 		button.setPreferredSize(new Dimension(buttonWidth, buttonHeight));
@@ -93,7 +105,7 @@ public class GUI extends JFrame {
 				if( (filePath = Tools.selectFileFrame()) != null){
 					System.out.println("This file was selected: "+filePath);
 					try {
-						mainThread.startRegularBackupProtocol(filePath, 1);
+						mainThread.startRegularBackupProtocol(filePath, (int) spinner.getValue());
 					} catch (IOException e1) {
 						e1.printStackTrace();
 					} //TODO replication degree hardcoded
