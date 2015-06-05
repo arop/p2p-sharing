@@ -1,27 +1,22 @@
 package main;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 
 /**
  * Class represents a chunk
  * @author André Pires, Filipe Gama
  *
  */
-public class Chunk {
+public class Chunk implements Comparator<Chunk>,Comparable<Chunk>{
 	private byte[] chunk;
 	private String fileId;
 	private String fileName;
 	private int chunkNo, replicationDeg = 1;
 	private ArrayList<Integer> userIDs;
 
-	public ArrayList<Integer> getUserIDs() {
-		return userIDs;
-	}
-
-	public void setUserIDs(ArrayList<Integer> userIDs) {
-		this.userIDs = userIDs;
-	}
-
+	public Chunk() {}
+	
 	public Chunk(byte[] c) {
 		chunk = c.clone();
 		userIDs = new ArrayList<Integer>();
@@ -113,8 +108,22 @@ public class Chunk {
 	public void addUserID(int id) {
 		userIDs.add(id);
 	}
-
-	public ArrayList<Integer> getUserIds() {
+	
+	public ArrayList<Integer> getUserIDs() {
 		return userIDs;
+	}
+
+	public void setUserIDs(ArrayList<Integer> userIDs) {
+		this.userIDs = userIDs;
+	}
+
+	@Override
+	public int compare(Chunk arg0, Chunk arg1) {
+		return arg0.chunkNo - arg1.chunkNo;
+	}
+	
+	@Override
+	public int compareTo(Chunk c) {
+		return chunkNo - c.chunkNo;
 	}
 }

@@ -19,12 +19,12 @@ public class FileShareThreadSend extends Thread{
 	private String filePath;
 	private PeerNew mainThread;
 	private SSLSocket socket;
-	
+
 	public FileShareThreadSend(User friend, String filePath, int friendPortForShare, PeerNew mainThread) throws Exception {
 		this.friend = friend;
 		this.filePath = filePath;
 		this.mainThread = mainThread;
-		
+
 		this.socket = mainThread.getSocketConnection(friend.getIp(), friendPortForShare);
 		if (this.socket == null)
 			throw new Exception ("Erro creating socket to share file with friend. Addr: "+friend.getIp() + " / Port: " + friendPortForShare);
@@ -32,8 +32,6 @@ public class FileShareThreadSend extends Thread{
 
 	@Override
 	public void run() {
-
-
 		PrintWriter out = null;
 		BufferedReader in = null;
 		String response = null;
@@ -43,18 +41,18 @@ public class FileShareThreadSend extends Thread{
 
 			out = new PrintWriter(socket.getOutputStream(), true);
 			in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-			
+
 			InputStream br = new FileInputStream(this.filePath);
-			
-		    int maxBufferSize = 200000;
-		    byte[] buffer = new byte[maxBufferSize];
-		    int numChars;
-		    Base64.Encoder enc = Base64.getEncoder();
-		    boolean fail = false;
-		    
-		    while ((numChars = br.read(buffer, 0, maxBufferSize)) > 0 ) { //200KB for each iteration
-		    	 String encodedLine = enc.encodeToString(ArrayUtils.subarray(buffer, 0, numChars));
-		    	//SEND MESSAGE
+
+			int maxBufferSize = 200000;
+			byte[] buffer = new byte[maxBufferSize];
+			int numChars;
+			Base64.Encoder enc = Base64.getEncoder();
+			boolean fail = false;
+
+			while ((numChars = br.read(buffer, 0, maxBufferSize)) > 0 ) { //200KB for each iteration
+				String encodedLine = enc.encodeToString(ArrayUtils.subarray(buffer, 0, numChars));
+				//SEND MESSAGE
 				out.println("LINE#"+encodedLine);
 
 				//GET RESPONSE 
@@ -63,13 +61,12 @@ public class FileShareThreadSend extends Thread{
 					fail = true;
 					break;
 				}
-					
-		    }
-		    
-		    if (!fail){
-		    	//sucesso
-		    	out.println("END#");
-		    	response = in.readLine();
+			}
+
+			if (!fail){
+				//sucesso
+				out.println("END#");
+				response = in.readLine();
 				if (!response.equals("OK")){
 					//friend não recebeu correctamente o ficheiro
 					System.out.println("Friend hasn't received file correctly (file sizes don't match)");
@@ -79,17 +76,16 @@ public class FileShareThreadSend extends Thread{
 				else{
 					System.out.println("File successfully shared with "+this.friend.getUsername());
 				}
-		    }
-		    else{
-		    	//algo falhou
-		    	System.out.println("Friend hasn't received file correctly.");
+			}
+			else{
+				//algo falhou
+				System.out.println("Friend hasn't received file correctly.");
 				System.out.println("	file name: "+this.filePath);
 				System.out.println("	friend name: "+this.friend.getUsername());
-		    }
-			
+			}
 
 			// Closing the Streams and the Socket
-		    br.close();
+			br.close();
 			out.close();
 			in.close();
 			socket.close();		

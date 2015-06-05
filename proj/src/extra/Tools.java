@@ -5,15 +5,11 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.UnknownHostException;
-import org.apache.commons.codec.binary.Base64;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.swing.JFileChooser;
-
-import org.apache.commons.lang.ArrayUtils;
-
-import com.google.gson.Gson;
 
 import user.User;
 import main.Chunk;
@@ -28,7 +24,7 @@ public abstract class Tools {
 	static long folderSize = 10000000L;
 	static boolean debug = true;
 	static String version = "1.0";	
-	
+
 	/**
 	 * Checks if the input ips are valid
 	 * @param ip
@@ -53,8 +49,7 @@ public abstract class Tools {
 		}
 		return null;
 	}
-	
-	
+
 	public static String generateNotRespondMessage(String type, String fileId, int chunkNo) {
 		switch(type) {
 		case "GETCHUNK":
@@ -62,9 +57,7 @@ public abstract class Tools {
 		}
 		return null;
 	}
-	
-	
-	
+
 	public static String sendGetChunkServer(String type, String fileId, User u) {
 		switch(type) {
 		case "DELETE":
@@ -72,9 +65,7 @@ public abstract class Tools {
 		}
 		return null;
 	}
-	
 
-	
 	/**
 	 * 
 	 * @param type
@@ -88,9 +79,6 @@ public abstract class Tools {
 		case "PUTCHUNK":
 			message = "PUTCHUNK " + String.valueOf(String.valueOf(body.length())) + " " + chunk.getFileId() +  " "  + chunk.getChunkNo() + " " + chunk.getReplicationDeg() 
 			+ " \r\n\r\n" + body + "\r\n\r\n";
-			
-//			message = "PUTCHUNK " + Tools.getVersion() + " " + chunk.getFileId() +  " "  + chunk.getChunkNo() + " " + chunk.getReplicationDeg() 
-//					+ "\r\n\r\n" + gson.toJson(chunk) + "\r\n\r\n";
 			break;
 		case "STORED":
 			message = "STORED " + "0" + " " +  chunk.getFileId() +  " "  + chunk.getChunkNo() + " \r\n\r\n" + "\r\n\r\n"; 
@@ -98,8 +86,6 @@ public abstract class Tools {
 		case "CHUNK": 
 			message =  "CHUNK "  +  String.valueOf(body.length()) + " " +  chunk.getFileId() +  " "  + chunk.getChunkNo() + " \r\n\r\n" +
 					body+ "\r\n\r\n";
-//			message =  "CHUNK "  + Tools.getVersion() + " " +  chunk.getFileId() +  " "  + chunk.getChunkNo() + "\r\n\r\n" +
-//					gson.toJson(chunk)+ "\r\n\r\n";
 			break;		
 		case "REMOVED":
 			message = "REMOVED " +  "0"  + " " +  chunk.getFileId() +  " "  + chunk.getChunkNo() + " \r\n\r\n" + "\r\n\r\n"; 
@@ -201,7 +187,7 @@ public abstract class Tools {
 		String message = type + " " + "0" + " " + user_id + " \r\n\r\n" + "\r\n\r\n" ;
 		return message;
 	}
-	
+
 	public static String getPeerAddress() throws UnknownHostException {
 		return InetAddress.getLocalHost().getHostAddress();
 	}
@@ -298,19 +284,19 @@ public abstract class Tools {
 	public static String getBody(String msg) {
 		int size = 0;
 		String[] parts = msg.split(" +");
-		
+
 		if(parts[0].equals("NOTRESPOND")) size = Integer.parseInt(parts[2].trim());
 		else size =  Integer.parseInt(parts[1].trim());
-				
+
 		int index = msg.indexOf("\r\n\r\n") + 4;
 		if (index < 0)
 			return null;
-		
+
 		int index2 = msg.substring(index).indexOf("\r\n\r\n");
-		
+
 		if(index2 < 0)
 			return msg.substring(index);
-		
+
 		return msg.substring(index,size+index);
 	}
 
@@ -330,19 +316,18 @@ public abstract class Tools {
 	 */
 	public static String selectFileFrame(){
 		JFileChooser chooser = new JFileChooser();
-	    /*FileNameExtensionFilter filter = new FileNameExtensionFilter(
+		/*FileNameExtensionFilter filter = new FileNameExtensionFilter(
 	        "JPG & GIF Images", "jpg", "gif");
 	    chooser.setFileFilter(filter);*/
-	    int returnVal = chooser.showOpenDialog(null);
-	    if(returnVal == JFileChooser.APPROVE_OPTION) {
-	       System.out.println("You chose to open this file: " +
-	            chooser.getSelectedFile().getName());
-	       return chooser.getSelectedFile().getPath();
-	    }
-	    return null;	
+		int returnVal = chooser.showOpenDialog(null);
+		if(returnVal == JFileChooser.APPROVE_OPTION) {
+			System.out.println("You chose to open this file: " +
+					chooser.getSelectedFile().getName());
+			return chooser.getSelectedFile().getPath();
+		}
+		return null;	
 	}
-	
-	
+
 	/**
 	 * 
 	 * @param fileName
@@ -351,19 +336,16 @@ public abstract class Tools {
 	public static String[] splitFileExtension(String fileName){
 		return fileName.split("\\.(?=[^\\.]+$)");
 	}
-	
+
+	@SuppressWarnings("restriction")
 	public static String encode(byte[] bytes){
-		
 		//alternative 1 -> try encoding base64 (sun)
 		sun.misc.BASE64Encoder enc = new sun.misc.BASE64Encoder();
-		return enc.encode(bytes);
-		
-		//alternative 2 -> simple string conversion
-		//return new String(bytes); 
+		return enc.encode(bytes); 
 	}
-	
+
+	@SuppressWarnings("restriction")
 	public static byte[] decode(String bytes){
-		
 		//alternative 1 -> try encoding base64 (sun)
 		sun.misc.BASE64Decoder dec = new sun.misc.BASE64Decoder();
 		try {
@@ -373,11 +355,5 @@ public abstract class Tools {
 			e.printStackTrace();
 			return null;
 		}
-		
-		//alternative 2 -> simple string conversion
-		//return bytes.getBytes();
 	}
-	
-	
-	
 }

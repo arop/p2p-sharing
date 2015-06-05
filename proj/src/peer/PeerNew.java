@@ -16,7 +16,6 @@ import java.lang.reflect.Type;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivilegedActionException;
-import java.security.Security;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -39,14 +38,12 @@ import ui.loginFrame.LoginFrame;
 import ui.mainFrame.GUI;
 import user.FacebookTest;
 import user.User;
-import chrriis.dj.nativeswing.swtimpl.NativeInterface;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
-import com.sun.net.ssl.internal.ssl.Provider;
 
 import extra.FileManagement;
 import extra.StateMachine;
@@ -60,7 +57,7 @@ public class PeerNew {
 	private Map <Chunk, Integer> degreeListSent;
 
 	ArrayList<User> friends;
-	
+
 	private Map <String, String> backupList;
 	private Map <String, Integer> backupList2;
 
@@ -72,6 +69,8 @@ public class PeerNew {
 
 	ConnectionListenerPeer con_listener;
 	private Map<String,ArrayList<Integer>> filesUserID;
+
+	private LoginFrame loginFrame;
 
 	public PeerNew() throws IOException {		
 		chunklist = new ArrayList<Chunk>();
@@ -85,13 +84,11 @@ public class PeerNew {
 		degreeListSent = new HashMap<Chunk, Integer>();
 
 		chunksReceived = new ArrayList<Chunk>();
-		
+
 		if(degreeListSent.isEmpty()) {
 			readDegreeList("files\\lists\\degreeListSent.txt");
 		}
 	}
-
-	private LoginFrame loginFrame;
 
 	public ArrayList<User> getAllUsersFromServer(){
 		String response = this.sendMessage(Tools.generateMessage("GETALLUSERS"), serverAddress, serverPort,0);
@@ -136,11 +133,6 @@ public class PeerNew {
 	 * @param user_ids array of ids if the users to add as friends.
 	 */
 	public boolean addFriends(int[] user_ids) {
-
-		/*if (user_ids == null)
-			System.out.println("nulosss");
-		else System.out.println(user_ids[0]);*/
-
 		Gson gson = new Gson();
 		String json_data = gson.toJson(user_ids);
 		String response = this.sendMessage(Tools.generateJsonMessage("ADDFRIENDS", localUser.getId(), json_data), serverAddress, serverPort,0);
@@ -149,7 +141,6 @@ public class PeerNew {
 	}
 
 	public void startPeer() throws InvocationTargetException, InterruptedException{
-
 		while(true){
 			loginFrame = new LoginFrame(this);
 
@@ -160,9 +151,8 @@ public class PeerNew {
 			loginFrame.dispose();
 
 			if (!loginState.equals("success")){
-				
 				System.out.println("login not success??");
-				
+
 				if (this.loginFacebook(Integer.parseInt(loginState.split("-")[1]))){
 					break;
 				}
@@ -172,8 +162,6 @@ public class PeerNew {
 				break;
 			}
 		}
-		
-		System.out.println("out of while cycle");
 
 		this.friends = new ArrayList<User>();//initialize list
 
@@ -181,15 +169,13 @@ public class PeerNew {
 		PeerNew thisThread = this;
 
 		//NativeInterface.open(); // not sure what else may be needed for this
-		
-			SwingUtilities.invokeAndWait(new Runnable() {
-				public void run() {
-					GUI gui = new GUI(thisThread);
-					gui.setVisible(true);
-				}
-			});
-	
 
+		SwingUtilities.invokeAndWait(new Runnable() {
+			public void run() {
+				GUI gui = new GUI(thisThread);
+				gui.setVisible(true);
+			}
+		});
 
 		//connection listener -> thread always reading in user's port.
 		con_listener = new ConnectionListenerPeer(this);
@@ -221,7 +207,6 @@ public class PeerNew {
 	}
 
 	public boolean loginFacebook(int port) {
-		
 		FacebookTest fb = new FacebookTest();
 		String json = fb.getJsonUser();
 		JsonElement jelement = new JsonParser().parse(json);
@@ -243,14 +228,12 @@ public class PeerNew {
 		return true;
 	}
 
-
 	public boolean register(String username, String email, String password1, String password2, int desiredPort) {
 		if(password1.equals(password2)) {
 			String messagebody = username + " " + email + " " + password1 + " " + desiredPort;
 			String response = this.sendMessage(Tools.generateJsonMessage("REGISTER",messagebody), serverAddress, serverPort,0);
 			return Tools.getType(response).equals("OK");
 		}
-
 		return false;
 	}
 
@@ -321,7 +304,6 @@ public class PeerNew {
 					incConfirmations(ficticio.getFileId(),ficticio.getChunkNo(),degreeListSent);
 					chunk.addUserID(temp.getId());
 				}
-
 				tempRepDegree--;
 			}
 
@@ -350,7 +332,6 @@ public class PeerNew {
 	}
 
 	public boolean shareFileWithFriend(int friend_id){
-
 		User friend;
 		if ( (friend= this.getUserFromServer(friend_id)) == null)
 			return false;
@@ -377,7 +358,6 @@ public class PeerNew {
 			System.out.println(e.getMessage());
 			return false;
 		}
-
 		t.start();	
 
 		return true;
@@ -409,7 +389,6 @@ public class PeerNew {
 			System.out.println("Exception message: "+e.getMessage());
 			e.printStackTrace();
 		}
-
 		return port;
 	}
 
@@ -436,7 +415,6 @@ public class PeerNew {
 	public synchronized String sendMessage(String msg, String ip_dest, int port_dest, int connection_try_number){
 		System.out.println("Sending message: " + Tools.getHead(msg));
 
-
 		int timeout = 15000; //timeout in miliseconds
 
 		//SSLSocketFactory sslsocketfactory = (SSLSocketFactory)SSLSocketFactory.getDefault();
@@ -448,8 +426,7 @@ public class PeerNew {
 
 		try {
 			sslSocket = getSocketConnection(ip_dest, port_dest);
-			
-			
+
 			//sslSocket = (SSLSocket)sslsocketfactory.createSocket(ip_dest,port_dest);
 			sslSocket.setSoTimeout(timeout);
 
@@ -478,7 +455,7 @@ public class PeerNew {
 			PrivilegedActionException priexp = new PrivilegedActionException(e);
 			System.out.println(" Priv exp --- " + priexp.getMessage());
 			System.out.println(" Exception occurred .... " +e);
-			
+
 			System.out.println("try: "+connection_try_number);
 			return this.sendMessage(msg, ip_dest, port_dest,connection_try_number+1);
 		}
@@ -496,10 +473,9 @@ public class PeerNew {
 			TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
 			tmf.init(keyStore);
 			SSLContext ctx = SSLContext.getInstance("SSL");
-			
+
 			ctx.init(null, tmf.getTrustManagers(), null);
 			SSLSocketFactory factory = ctx.getSocketFactory();
-
 
 			return (SSLSocket) factory.createSocket(host, port);
 		} catch (Exception e) {
@@ -510,15 +486,12 @@ public class PeerNew {
 
 	public SSLServerSocket getServerSocket(int socket_port) {
 		try {
-
 			/* Create keystore */
 			KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
 			keyStore.load(new FileInputStream("..\\certificates\\server\\keystore"), "peerkey".toCharArray());
 
-
 			KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
 			kmf.init(keyStore, "peerkey".toCharArray()); // That's the key's password, if different.
-
 
 			/* Get factory for the given keystore */
 			TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
@@ -535,7 +508,6 @@ public class PeerNew {
 			System.out.println("Problem creating SSL Server Socket: "+ e.getMessage()+"\n"+e.getCause());
 			return null;
 		}
-
 	}
 
 	/**
@@ -687,27 +659,27 @@ public class PeerNew {
 	 * Deletes Chunk with maximum replication degree ratio
 	 * @throws IOException
 	 */
-	//	public void deleteWorstChunk() throws IOException {
-	//		//Chunk chunk = mostRedundant();
-	//
-	//		if(chunk != null) {
-	//			String filename = chunk.getFileId() + "_chunk_" + chunk.getChunkNo();
-	//
-	//			File f = new File("files\\backups\\"+filename);
-	//			System.gc();
-	//			f.delete(); 
-	//
-	//			//removeFromStoredMap(chunk);
-	//
-	//			//this.sendMessage(Tools.generateMessage("REMOVED", chunk),MC_IP,MC_Port);
-	//		}
-	//
-	//		//FileManagement.saveMapToFile(getStoredMap(),"files\\lists\\degreeListStored.txt");
-	//
-	//		/* reloads chunk list */
-	//		chunklist.clear();
-	//		loadChunkList();
-	//	}
+	/*public void deleteWorstChunk() throws IOException {
+			Chunk chunk = mostRedundant();
+
+			if(chunk != null) {
+				String filename = chunk.getFileId() + "_chunk_" + chunk.getChunkNo();
+
+				File f = new File("files\\backups\\"+filename);
+				System.gc();
+				f.delete(); 
+
+				//removeFromStoredMap(chunk);
+
+				//this.sendMessage(Tools.generateMessage("REMOVED", chunk),MC_IP,MC_Port);
+			}
+
+			//FileManagement.saveMapToFile(getStoredMap(),"files\\lists\\degreeListStored.txt");
+
+			//reloads chunk list
+			chunklist.clear();
+			loadChunkList();
+		}*/
 
 	/**
 	 * Checks if peer has chunk
@@ -745,7 +717,6 @@ public class PeerNew {
 	 * @return
 	 */
 	public boolean alreadyExists(String fileId, int chunkNo) {
-		System.out.println("entrou no alreadyExists");
 		for (Chunk chunk : chunksReceived) {
 			if(chunk.getFileId().equals(fileId) && chunk.getChunkNo() == chunkNo) 
 				return true;
@@ -861,7 +832,7 @@ public class PeerNew {
 	}
 
 	public void startRestoreChunks(String filename) {
-		boolean gotThisChunk = false;
+		//boolean gotThisChunk = false;
 		String fileId = getFileIdOf(filename);
 
 		setChunksToReceive(getFileNumberChunks(filename));
@@ -880,21 +851,15 @@ public class PeerNew {
 						//gotThisChunk = true;
 						processChunkMessage(response);
 					}
-					
 				}
 			}
-//
-//
-//			gotThisChunk = false;
-//
-//			if(!gotThisChunk) {
-//				for(int i = 0; i < temp.size(); i++) {
-//					sendMessage(Tools.generateNotRespondMessage("GETCHUNK", fileId,chunk.getChunkNo()), this.serverAddress, this.serverPort,0);
-//				}
-//			}
-
-
-
+			//			gotThisChunk = false;
+			//
+			//			if(!gotThisChunk) {
+			//				for(int i = 0; i < temp.size(); i++) {
+			//					sendMessage(Tools.generateNotRespondMessage("GETCHUNK", fileId,chunk.getChunkNo()), this.serverAddress, this.serverPort,0);
+			//				}
+			//			}
 
 		}		
 	}
@@ -903,10 +868,10 @@ public class PeerNew {
 		if(message == null) {
 			System.out.println("Chunk null. returning");
 		}
-	
+
 		String msgBody = Tools.getBody(message);
 		byte[] lineDecoded = Tools.decode(msgBody);
-		
+
 		Chunk chunkRestored = new Chunk(lineDecoded);
 		//Chunk chunkRestored = g.fromJson(Tools.getBody(message), Chunk.class);
 		con_listener.splitMessage(chunkRestored,Tools.getHead(message));
@@ -921,7 +886,6 @@ public class PeerNew {
 			clearReceivedChunks();
 		}
 	}
-
 
 	public int getChunksToReceive() {
 		return chunksToReceive;
