@@ -38,25 +38,16 @@ public class GUI extends JFrame {
 	private void initUI() {
 
 		setTitle("Distributed Backup System");
-		this.setMinimumSize(new Dimension(700,500));
-		//setSize(300, 200);
+		this.setMinimumSize(new Dimension(600,500));
 		setLocationRelativeTo(null);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		setResizable(false);
-
-		//List<FriendCircle> circles = new ArrayList<FriendCircle>();
-		/*circles.add(new FriendCircle("Circle 1", friendsList.subList(2, 6)));
-        circles.add(new FriendCircle("Circle 2", friendsList.subList(13, 17)));
-        circles.add(new FriendCircle("Circle 3", friendsList.subList(4, 7)));*/
 
 		JPanel friendshipsPanel = new JPanel();
 		friendshipsPanel.setLayout(new BorderLayout());
 
 		FriendsPanel friendsPanel = new FriendsPanel(mainThread);
 		friendshipsPanel.add(friendsPanel, BorderLayout.WEST);
-
-		//CirclesPanel circlesPanel = new CirclesPanel(circles);
-		//friendshipsPanel.add(circlesPanel, BorderLayout.EAST);
 
 		this.add(generateButtonsPanel(150, 500), BorderLayout.WEST);
 		this.add(friendshipsPanel, BorderLayout.EAST);
@@ -111,7 +102,7 @@ public class GUI extends JFrame {
 						mainThread.startRegularBackupProtocol(filePath, (int) spinner.getValue());
 					} catch (IOException e1) {
 						e1.printStackTrace();
-					} //TODO replication degree hardcoded
+					}
 				}
 			}
 		});
