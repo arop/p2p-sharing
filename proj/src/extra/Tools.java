@@ -83,6 +83,7 @@ public abstract class Tools {
 	 */
 	public static String generateMessage(String type, Chunk chunk) {
 		String message = null;
+		String body = Tools.encode(chunk.getByteArray());
 		switch(type) {
 		case "PUTCHUNK":
 			message = "PUTCHUNK " + String.valueOf(String.valueOf(body.length())) + " " + chunk.getFileId() +  " "  + chunk.getChunkNo() + " " + chunk.getReplicationDeg() 
