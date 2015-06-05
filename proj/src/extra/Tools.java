@@ -83,7 +83,7 @@ public abstract class Tools {
 	 */
 	public static String generateMessage(String type, Chunk chunk) {
 		Gson gson = new Gson();
-		String body = new String(chunk.getByteArray(),StandardCharsets.ISO_8859_1);
+		String body = new String(chunk.getByteArray());
 		String message = null;
 		switch(type) {
 		case "PUTCHUNK":

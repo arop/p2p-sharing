@@ -12,7 +12,6 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
-import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.Security;
@@ -789,7 +788,6 @@ public class PeerNew {
 	public void clearChunkList() {
 		chunklist.clear();
 	}
-	/* ============== OBRAS ============== */
 
 	public void readDegreeList(String file) throws IOException {
 		if(!FileManagement.fileExists(file))
@@ -912,7 +910,7 @@ public class PeerNew {
 
 		Gson g = new Gson();
 		
-		Chunk chunkRestored = new Chunk(Tools.getBody(message).getBytes(StandardCharsets.ISO_8859_1));
+		Chunk chunkRestored = new Chunk(Tools.getBody(message).getBytes());
 //		Chunk chunkRestored = g.fromJson(Tools.getBody(message), Chunk.class);
 		con_listener.splitMessage(chunkRestored,Tools.getHead(message));
 		//so guarda o chunk se ainda nao o tiver
