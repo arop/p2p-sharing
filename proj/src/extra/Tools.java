@@ -1,12 +1,13 @@
 package extra;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -27,7 +28,7 @@ public abstract class Tools {
 	static long folderSize = 10000000L;
 	static boolean debug = true;
 	static String version = "1.0";	
-
+	
 	/**
 	 * Checks if the input ips are valid
 	 * @param ip
@@ -48,7 +49,7 @@ public abstract class Tools {
 	public static String generateNotRespondMessage(String type, String fileId, User u) {
 		switch(type) {
 		case "DELETE":
-			return "NOTRESPOND DELETE " + Tools.getVersion() + " " + fileId + " " + u.getId() + "\r\n\r\n";
+			return "NOTRESPOND DELETE " + "0" + " " + fileId + " " + u.getId() + "\r\n\r\n"+ "\r\n\r\n";
 		}
 		return null;
 	}
@@ -57,7 +58,7 @@ public abstract class Tools {
 	public static String generateNotRespondMessage(String type, String fileId, int chunkNo) {
 		switch(type) {
 		case "GETCHUNK":
-			return "NOTRESPOND GETCHUNK " + Tools.getVersion() + " " + fileId + " " + chunkNo + "\r\n\r\n";
+			return "NOTRESPOND GETCHUNK " + "0" + " " + fileId + " " + chunkNo +"\r\n\r\n" + "\r\n\r\n";
 		}
 		return null;
 	}
@@ -67,50 +68,11 @@ public abstract class Tools {
 	public static String sendGetChunkServer(String type, String fileId, User u) {
 		switch(type) {
 		case "DELETE":
-			return "NOTRESPOND DELETE " + Tools.getVersion() + " " + fileId + " " + u.getId() + "\r\n\r\n";
+			return "NOTRESPOND DELETE " + "0" + " " + fileId + " " + u.getId() + "\r\n\r\n" + "\r\n\r\n";
 		}
 		return null;
 	}
 	
-	/**
-	 * 
-	 * @param in
-	 * @param messagesWithBody
-	 * @return
-	 * @throws IOException
-	 */
-	public static String stateMachine(BufferedReader in,ArrayList<String> messagesWithBody ) throws IOException {
-		String response;
-		int state = 0;
-		boolean firstTime = true;
-		
-		response = "";
-		char nextChar = 0;
-
-		while(true) {		
-
-			nextChar = (char) in.read();
-			response += nextChar;
-
-			if(nextChar == '\r' && (state == 0 || state == 2)) {
-				state++;
-			}
-			else if(nextChar == '\n' && state == 1) {
-				state++;
-			}
-			else if(nextChar == '\n' && state == 3) {
-				if(messagesWithBody.contains(response.substring(0, response.indexOf(" "))) && firstTime) {
-					firstTime = false;
-					state = 0;
-				}
-				else break;
-			}
-			else state = 0;
-		}
-
-		firstTime = true;
-		return response;
-	}
 
 	
 	/**
@@ -121,26 +83,27 @@ public abstract class Tools {
 	 */
 	public static String generateMessage(String type, Chunk chunk) {
 		Gson gson = new Gson();
+		String body = new String(chunk.getByteArray(),StandardCharsets.ISO_8859_1);
 		String message = null;
 		switch(type) {
 		case "PUTCHUNK":
-			//message = "PUTCHUNK " + Tools.getVersion() + " " + chunk.getFileId() +  " "  + chunk.getChunkNo() + " " + chunk.getReplicationDeg() 
-			//+ "\r\n\r\n" + (new String(chunk.getByteArray(),StandardCharsets.ISO_8859_1)) + "\r\n\r\n";
+			message = "PUTCHUNK " + String.valueOf(String.valueOf(body.length())) + " " + chunk.getFileId() +  " "  + chunk.getChunkNo() + " " + chunk.getReplicationDeg() 
+			+ " \r\n\r\n" + body + "\r\n\r\n";
 			
-			message = "PUTCHUNK " + Tools.getVersion() + " " + chunk.getFileId() +  " "  + chunk.getChunkNo() + " " + chunk.getReplicationDeg() 
-					+ "\r\n\r\n" + gson.toJson(chunk) + "\r\n\r\n";
+//			message = "PUTCHUNK " + Tools.getVersion() + " " + chunk.getFileId() +  " "  + chunk.getChunkNo() + " " + chunk.getReplicationDeg() 
+//					+ "\r\n\r\n" + gson.toJson(chunk) + "\r\n\r\n";
 			break;
 		case "STORED":
-			message = "STORED " +  Tools.getVersion() + " " +  chunk.getFileId() +  " "  + chunk.getChunkNo() + "\r\n\r\n"; 
+			message = "STORED " + "0" + " " +  chunk.getFileId() +  " "  + chunk.getChunkNo() + " \r\n\r\n" + "\r\n\r\n"; 
 			break;	
 		case "CHUNK": 
-			//message =  "CHUNK "  + Tools.getVersion() + " " +  chunk.getFileId() +  " "  + chunk.getChunkNo() + "\r\n\r\n" +
-				//	(new String(chunk.getByteArray(),StandardCharsets.ISO_8859_1))+ "\r\n\r\n";
-			message =  "CHUNK "  + Tools.getVersion() + " " +  chunk.getFileId() +  " "  + chunk.getChunkNo() + "\r\n\r\n" +
-					gson.toJson(chunk)+ "\r\n\r\n";
+			message =  "CHUNK "  +  String.valueOf(body.length()) + " " +  chunk.getFileId() +  " "  + chunk.getChunkNo() + " \r\n\r\n" +
+					(body)+ "\r\n\r\n";
+//			message =  "CHUNK "  + Tools.getVersion() + " " +  chunk.getFileId() +  " "  + chunk.getChunkNo() + "\r\n\r\n" +
+//					gson.toJson(chunk)+ "\r\n\r\n";
 			break;		
 		case "REMOVED":
-			message = "REMOVED " +  Tools.getVersion() + " " +  chunk.getFileId() +  " "  + chunk.getChunkNo() + "\r\n\r\n"; 
+			message = "REMOVED " +  "0"  + " " +  chunk.getFileId() +  " "  + chunk.getChunkNo() + " \r\n\r\n" + "\r\n\r\n"; 
 			break;	
 		default:
 			System.err.println("Invalid Message!");
@@ -156,7 +119,7 @@ public abstract class Tools {
 	 * @return
 	 */
 	public static String generateDeleteMessage(String type, String fileId) {
-		return "DELETE " + Tools.getVersion() + " " + fileId + "\r\n\r\n";
+		return "DELETE " + "0" + " " + fileId + " \r\n\r\n" + "\r\n\r\n";
 	}
 
 	/**
@@ -167,7 +130,7 @@ public abstract class Tools {
 	 * @return
 	 */
 	public static String generateGetChunkMessage(String type, String fileId, int chunkNo) {
-		return "GETCHUNK " + Tools.getVersion() + " " + fileId + " " + chunkNo + "\r\n\r\n";
+		return "GETCHUNK " + "0" + " " + fileId + " " + chunkNo + " \r\n\r\n" + "\r\n\r\n";
 	}
 
 	/**
@@ -182,16 +145,16 @@ public abstract class Tools {
 		String message = null;
 		switch(type) {
 		case "GETALLUSERS":
-			message = "GETALLUSERS " + Tools.getVersion() + "\r\n\r\n";
+			message = "GETALLUSERS " + "0" + " \r\n\r\n" + "\r\n\r\n";
 			break;
 		case "GETONLINEUSERS":
-			message = "GETONLINEUSERS " + Tools.getVersion() + "\r\n\r\n";
+			message = "GETONLINEUSERS " + "0" + " \r\n\r\n" + "\r\n\r\n";
 			break;
 		case "OK":
-			message = "OK " + Tools.getVersion() + "\r\n\r\n";
+			message = "OK " + "0" + " \r\n\r\n" + "\r\n\r\n";
 			break;
 		case "NOTOK":
-			message = "NOTOK " + Tools.getVersion() + "\r\n\r\n";
+			message = "NOTOK " + "0" + " \r\n\r\n" + "\r\n\r\n";
 			break;
 
 		default:
@@ -209,7 +172,7 @@ public abstract class Tools {
 	 * @return
 	 */
 	public static String generateJsonMessage(String type, String json_body){
-		String message = type + " " + Tools.getVersion() + "\r\n\r\n" + json_body + "\r\n\r\n" ;
+		String message = type + " " + String.valueOf(json_body.length()) + " \r\n\r\n" + json_body + "\r\n\r\n" ;
 		return message;
 	}
 
@@ -223,7 +186,7 @@ public abstract class Tools {
 	 * @return generated message
 	 */
 	public static String generateJsonMessage(String type, int user_id, String json_body){
-		String message = type + " " + Tools.getVersion() + " " + user_id + "\r\n\r\n" + json_body + "\r\n\r\n" ;
+		String message = type + " " + String.valueOf(json_body.length()) + " " + user_id + " \r\n\r\n" + json_body + "\r\n\r\n" ;
 		return message;
 	}
 
@@ -236,7 +199,7 @@ public abstract class Tools {
 	 * @return generated message
 	 */
 	public static String generateMessage(String type, int user_id){
-		String message = type + " " + Tools.getVersion() + " " + user_id + "\r\n\r\n" ;
+		String message = type + " " + "0" + " " + user_id + " \r\n\r\n" + "\r\n\r\n" ;
 		return message;
 	}
 	
@@ -334,6 +297,12 @@ public abstract class Tools {
 	 * @return body of the message
 	 */
 	public static String getBody(String msg) {
+		int size = 0;
+		String[] parts = msg.split(" +");
+		
+		if(parts[0].equals("NOTRESPOND")) size = Integer.parseInt(parts[2].trim());
+		else size =  Integer.parseInt(parts[1].trim());
+				
 		int index = msg.indexOf("\r\n\r\n") + 4;
 		if (index < 0)
 			return null;
@@ -343,7 +312,7 @@ public abstract class Tools {
 		if(index2 < 0)
 			return msg.substring(index);
 		
-		return msg.substring(index,index2+index);
+		return msg.substring(index,size+index);
 	}
 
 	/**

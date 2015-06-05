@@ -23,6 +23,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import extra.FileManagement;
+import extra.StateMachine;
 import extra.Tools;
 
 public class ConnectionListenerServer extends Thread{
@@ -59,11 +60,22 @@ public class ConnectionListenerServer extends Thread{
 					PrintWriter out = new PrintWriter(sslSocket.getOutputStream(), true); //vai responder por aqui
 					BufferedReader in = new BufferedReader(new InputStreamReader(sslSocket.getInputStream())); //lê daqui
 
-					String inputLine = in.readLine();
-					inputLine += in.readLine();
-					inputLine+= "\r\n\r\n";
-					inputLine += in.readLine();
+//					String inputLine = in.readLine();
+//					inputLine += in.readLine();
+//					inputLine+= "\r\n\r\n";
+//					inputLine += in.readLine();
+					
+					//GET RESPONSE 
+//					ArrayList<String> messages = new ArrayList<String>();
+//					messages.add("ADDFRIENDS");
+//					messages.add("REGISTER");
+//					messages.add("LOGIN");
+//					messages.add("GETUSER");
+					
+					String inputLine = new StateMachine().stateMachine(in);
 
+					
+				
 					System.out.println("message received: "+Tools.getHead(inputLine));
 					String origin_ip = sslSocket.getInetAddress().getHostAddress();
 					//PROCESS RECEIVED MESSAGE
