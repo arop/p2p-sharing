@@ -262,6 +262,7 @@ public class PeerNew {
 	}
 
 	public void startRegularBackupProtocol(String filePath, int repDegree) throws IOException {
+		System.out.println("rep degree: " + repDegree);
 		//1-> split file into chunks
 		ArrayList<Chunk> chunks = null; 
 		try {
