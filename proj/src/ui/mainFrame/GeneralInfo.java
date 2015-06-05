@@ -9,11 +9,11 @@ import javax.swing.JPanel;
 import peer.PeerNew;
 
 public class GeneralInfo extends JPanel {
-	
+
 	private static final long serialVersionUID = 1L;
-	
+
 	private PeerNew mainThread;
-	
+
 	JLabel numBackupFiles;
 	JLabel totalSize;
 	JLabel numFriends;
@@ -26,39 +26,41 @@ public class GeneralInfo extends JPanel {
 		super();
 		mainThread = peer;
 		this.setPreferredSize(new Dimension(width, height));
-		
+
 		numBackupFiles = new JLabel("number of files backed up: "+ mainThread.getBackupList().size());
 		totalSize = new JLabel("total size backed up: " + mainThread.getSizeBackedUp());
 		numFriends = new JLabel("number of friends: " + mainThread.getFriends().size());
 		numFriendsOn = new JLabel("number of friends online: " + mainThread.getNumberOfFriendsOnline());
 		serverOn = new JLabel("server online: YES");
-		
+
+		this.setLayout(new java.awt.GridLayout(10, 1));
+				
 		this.add(numBackupFiles);
 		this.add(totalSize);
 		this.add(numFriends);
 		this.add(numFriendsOn);
 		this.add(serverOn);
-		
+
 		int buttonWidth = width;    	
-    	int buttonHeight = 90;
-		
+		int buttonHeight = 90;
+
 		refreshButton = new JButton("Refresh");
-    	refreshButton.setPreferredSize(new Dimension(buttonWidth, buttonHeight));
-    	this.add(refreshButton);
+		refreshButton.setPreferredSize(new Dimension(buttonWidth, buttonHeight));
+		this.add(refreshButton, CENTER_ALIGNMENT);
 	}
-	
+
 	public void setNumBackupFiles(int num) {
 		numBackupFiles.setText("number of files backed up: " + mainThread.getBackupList().size());
 	}
-	
+
 	public void setSizeBackedUp(int num) {
 		totalSize.setText("total size backed up: " + mainThread.getSizeBackedUp());
 	}
-	
+
 	public void setNumberOfFriends(int num) {
 		numFriends.setText("number of friends: " + mainThread.getFriends().size());
 	}
-	
+
 	public void setNumberOnlineFriends(int num) {
 		numFriendsOn.setText("number of friends online: " + mainThread.getNumberOfFriendsOnline());
 	}
