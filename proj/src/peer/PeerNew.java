@@ -197,7 +197,7 @@ public class PeerNew {
 	public boolean login(String username, String password) {
 		if(username == null || password == null || username.length() == 0 || password.length() == 0)
 			return false;
-		
+
 		String messagebody = username + " " + password;
 		String response = this.sendMessage(Tools.generateJsonMessage("LOGIN",messagebody), serverAddress, serverPort,0);
 		if(!Tools.getType(response).equals("OK"))
@@ -246,82 +246,6 @@ public class PeerNew {
 		PeerNew peer = new PeerNew();
 
 		peer.startPeer();	
-	}
-
-	public void startRegularBackupProtocol(String filePath, int repDegree) throws IOException {
-		System.out.println("rep degree: " + repDegree);
-		//1-> split file into chunks
-		ArrayList<Chunk> chunks = null; 
-		try {
-			chunks = FileManagement.splitFile(filePath, repDegree);
-		} catch (FileNotFoundException | NoSuchAlgorithmException e) {
-			e.printStackTrace();
-		}
-
-		//2 -> get online users IPs and ports from server
-		ArrayList<User> onlineUsers = this.getOnlineUsersFromServer();
-
-		if (onlineUsers == null)
-			System.out.println("Null online users");
-		else {
-			for(User user : new ArrayList<User> (onlineUsers)){
-				if(user.getId() == localUser.getId()) onlineUsers.remove(user);
-				System.out.println("User: "+user.getIp()+":"+user.getPort());
-			}
-		}
-
-		//3 -> send each chunk for repDegree random users
-		if(onlineUsers.size() < repDegree) {
-			System.err.println("ERROR: Impossible rep degree at this point");
-			return;
-		}
-
-		ArrayList<Integer> usedIndexes = new ArrayList<Integer>();
-		for (Chunk chunk : chunks) {
-			usedIndexes.clear();
-			String msg = Tools.generateMessage("PUTCHUNK", chunk);
-
-			int tempRepDegree = repDegree;
-			Random r = new Random();
-
-			addToMap("send",chunk);
-			while(tempRepDegree > 0) {
-				int index = r.nextInt(onlineUsers.size());
-
-				while(usedIndexes.contains(index))
-					index = r.nextInt(onlineUsers.size());
-
-				usedIndexes.add(index);
-
-				User temp = onlineUsers.get(index);
-				System.out.println("sending message");
-				String answer = this.sendMessage(msg, temp.getIp(), temp.getPort(), 0);
-
-				System.out.println("Answer: " + answer);
-
-				if(answer == null) System.err.println("NULL");
-
-				if(Tools.getType(answer).equals("STORED")) {
-					Chunk ficticio = new Chunk(Tools.getBody(answer).getBytes());
-					con_listener.splitMessage(ficticio,Tools.getHead(answer));
-					incConfirmations(ficticio.getFileId(),ficticio.getChunkNo(),degreeListSent);
-					chunk.addUserID(temp.getId());
-				}
-				tempRepDegree--;
-			}
-
-			String[] filenameArray = filePath.split("\\\\");
-			String filename = filenameArray[filenameArray.length-1];
-
-			addToBackupList(filename,chunks.get(0).getFileId(),chunks.size());
-
-			for(Integer tempUser: usedIndexes) {
-				addUserToBackupFile(filename, onlineUsers.get(tempUser));
-			}
-
-			refreshBackupList();
-			FileManagement.saveMapToFile(degreeListSent, "files\\lists\\degreeListSent.txt");
-		}
 	}
 
 	private void addUserToBackupFile(String filename, User user) {
@@ -807,33 +731,95 @@ public class PeerNew {
 		return this.backupList.get(string);
 	}
 
-	/**
-	 * DELETE PROTOCOL
-	 * @param string filename
-	 * @throws IOException
-	 */
-	public void startDeleteChunks(String string) throws IOException {
-		if(!isBackedUp(string)) return;
-
-		String fileId = getFileIdOf(string);
-
-		for(Integer id: filesUserID.get(string)) {
-			User temp = getUserFromServer(id);
-
-			String response = sendMessage(Tools.generateDeleteMessage("DELETE", fileId), temp.getIp(), temp.getPort(),0);
-
-			if(response == null || response.contains("NOTOK")) 
-				sendMessage(Tools.generateNotRespondMessage("DELETE", fileId, temp), this.serverAddress, this.serverPort,0);
-
-			deleteFromSentLists(fileId);
-			refreshBackupList();
-		}
-	}
-
 	public ArrayList<String> getBackedUpFiles() {
 		return new ArrayList<String>(backupList.keySet());
 	}
 
+	/**
+	 * BACKUP PROTOCOL
+	 * @param filePath filename
+	 * @param repDegree replication degree
+	 * @throws IOException
+	 */
+	public void startRegularBackupProtocol(String filePath, int repDegree) throws IOException {
+		//1-> split file into chunks
+		ArrayList<Chunk> chunks = null; 
+		try {
+			chunks = FileManagement.splitFile(filePath, repDegree);
+		} catch (FileNotFoundException | NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		}
+
+		//2 -> get online users IPs and ports from server
+		ArrayList<User> onlineUsers = this.getOnlineUsersFromServer();
+
+		if (onlineUsers == null)
+			System.out.println("Null online users");
+		else {
+			for(User user : new ArrayList<User> (onlineUsers)){
+				if(user.getId() == localUser.getId()) onlineUsers.remove(user);
+				System.out.println("User: "+user.getIp()+":"+user.getPort());
+			}
+		}
+
+		//3 -> send each chunk for repDegree random users
+		if(onlineUsers.size() < repDegree) {
+			System.err.println("ERROR: Impossible rep degree at this point");
+			return;
+		}
+
+		ArrayList<Integer> usedIndexes = new ArrayList<Integer>();
+		for (Chunk chunk : chunks) {
+			usedIndexes.clear();
+			String msg = Tools.generateMessage("PUTCHUNK", chunk);
+
+			int tempRepDegree = repDegree;
+			Random r = new Random();
+
+			addToMap("send",chunk);
+			while(tempRepDegree > 0) {
+				int index = r.nextInt(onlineUsers.size());
+
+				while(usedIndexes.contains(index))
+					index = r.nextInt(onlineUsers.size());
+
+				usedIndexes.add(index);
+
+				User temp = onlineUsers.get(index);
+				String answer = this.sendMessage(msg, temp.getIp(), temp.getPort(), 0);
+
+				System.out.println("Answer: " + answer);
+
+				if(answer == null) System.err.println("NULL");
+
+				if(Tools.getType(answer).equals("STORED")) {
+					Chunk ficticio = new Chunk(Tools.getBody(answer).getBytes());
+					con_listener.splitMessage(ficticio,Tools.getHead(answer));
+					incConfirmations(ficticio.getFileId(),ficticio.getChunkNo(),degreeListSent);
+					chunk.addUserID(temp.getId());
+				}
+				tempRepDegree--;
+			}
+
+			String[] filenameArray = filePath.split("\\\\");
+			String filename = filenameArray[filenameArray.length-1];
+
+			addToBackupList(filename,chunks.get(0).getFileId(),chunks.size());
+
+			for(Integer tempUser: usedIndexes) {
+				addUserToBackupFile(filename, onlineUsers.get(tempUser));
+			}
+
+			refreshBackupList();
+			FileManagement.saveMapToFile(degreeListSent, "files\\lists\\degreeListSent.txt");
+		}
+	}
+
+	/**
+	 * RESTORE PROTOCOL
+	 * @param string filename
+	 * @throws IOException
+	 */
 	public void startRestoreChunks(String filename) {
 		//boolean gotThisChunk = false;
 		String fileId = getFileIdOf(filename);
@@ -876,7 +862,6 @@ public class PeerNew {
 		byte[] lineDecoded = Tools.decode(msgBody);
 
 		Chunk chunkRestored = new Chunk(lineDecoded);
-		//Chunk chunkRestored = g.fromJson(Tools.getBody(message), Chunk.class);
 		con_listener.splitMessage(chunkRestored,Tools.getHead(message));
 		//so guarda o chunk se ainda nao o tiver
 		if(!alreadyExists(chunkRestored.getFileId(), chunkRestored.getChunkNo())) {
@@ -887,6 +872,29 @@ public class PeerNew {
 			System.out.println("Recovering file!");
 			FileManagement.recover_file(fileToRecover,chunksReceived);
 			clearReceivedChunks();
+		}
+	}
+
+	/**
+	 * DELETE PROTOCOL
+	 * @param string filename
+	 * @throws IOException
+	 */
+	public void startDeleteChunks(String string) throws IOException {
+		if(!isBackedUp(string)) return;
+
+		String fileId = getFileIdOf(string);
+
+		for(Integer id: filesUserID.get(string)) {
+			User temp = getUserFromServer(id);
+
+			String response = sendMessage(Tools.generateDeleteMessage("DELETE", fileId), temp.getIp(), temp.getPort(),0);
+
+			if(response == null || response.contains("NOTOK")) 
+				sendMessage(Tools.generateNotRespondMessage("DELETE", fileId, temp), this.serverAddress, this.serverPort,0);
+
+			deleteFromSentLists(fileId);
+			refreshBackupList();
 		}
 	}
 
@@ -913,29 +921,26 @@ public class PeerNew {
 	public void setChunksToReceive(int i) {
 		chunksToReceive = i;
 	}
-	
-	
+
 	public int getSizeBackedUp() {
-		// TODO Auto-generated method stub
-		return 0;
+		return (int) Tools.folderSize(new File("files\backups"));
 	}
-	
 
 	public int getNumberOfFriendsOnline() {
 		int total = 0, i = 0;
 		ArrayList<Integer> ids = new ArrayList<Integer>();
 		ArrayList<User> onlineUsers = this.getOnlineUsersFromServer();
-		
+
 		for(i = 0; i < onlineUsers.size(); i++) {
 			ids.add(onlineUsers.get(i).getId());
 		}
-		
+
 		for(i = 0; i < friends.size(); i++) {
 			if(ids.contains(friends.get(i).getId())) {
 				total++;
 			}
 		}
-		
+
 		return total;
 	}
 }

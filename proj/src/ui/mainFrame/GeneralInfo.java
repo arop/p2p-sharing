@@ -20,15 +20,12 @@ public class GeneralInfo extends JPanel {
 	JLabel numFriendsOn;
 	JLabel serverOn;
 
-
-	
 	JButton refreshButton;
 
 	public GeneralInfo(int width, int height,PeerNew peer){
 		super();
 		mainThread = peer;
 		this.setPreferredSize(new Dimension(width, height));
-		//this.setLayout(new GridLayout(0,1));
 		
 		numBackupFiles = new JLabel("number of files backed up: "+ mainThread.getBackupList().size());
 		totalSize = new JLabel("total size backed up: " + mainThread.getSizeBackedUp());
