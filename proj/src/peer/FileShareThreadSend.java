@@ -17,13 +17,13 @@ public class FileShareThreadSend extends Thread{
 
 	private User friend;
 	private String filePath;
-	private PeerNew mainThread;
+	//private PeerNew mainThread;
 	private SSLSocket socket;
 
 	public FileShareThreadSend(User friend, String filePath, int friendPortForShare, PeerNew mainThread) throws Exception {
 		this.friend = friend;
 		this.filePath = filePath;
-		this.mainThread = mainThread;
+		//this.mainThread = mainThread;
 
 		this.socket = mainThread.getSocketConnection(friend.getIp(), friendPortForShare);
 		if (this.socket == null)

@@ -23,7 +23,6 @@ public abstract class Tools {
 	static int packetSize = 15000;	
 	static long folderSize = 10000000L;
 	static boolean debug = true;
-	static String version = "1.0";	
 
 	/**
 	 * Checks if the input ips are valid
@@ -46,22 +45,6 @@ public abstract class Tools {
 		switch(type) {
 		case "DELETE":
 			return "NOTRESPOND DELETE " + "0" + " " + fileId + " " + u.getId() + "\r\n\r\n"+ "\r\n\r\n";
-		}
-		return null;
-	}
-
-	public static String generateNotRespondMessage(String type, String fileId, int chunkNo) {
-		switch(type) {
-		case "GETCHUNK":
-			return "NOTRESPOND GETCHUNK " + "0" + " " + fileId + " " + chunkNo +"\r\n\r\n" + "\r\n\r\n";
-		}
-		return null;
-	}
-
-	public static String sendGetChunkServer(String type, String fileId, User u) {
-		switch(type) {
-		case "DELETE":
-			return "NOTRESPOND DELETE " + "0" + " " + fileId + " " + u.getId() + "\r\n\r\n" + "\r\n\r\n";
 		}
 		return null;
 	}
@@ -242,14 +225,6 @@ public abstract class Tools {
 	 */
 	public static void setDebug(boolean debugIn) {
 		debug = debugIn;
-	}
-
-	public static String getVersion() {
-		return version;
-	}
-
-	public static void setVersion(String version) {
-		Tools.version = version;
 	}
 
 	public static int getFreePort(){
