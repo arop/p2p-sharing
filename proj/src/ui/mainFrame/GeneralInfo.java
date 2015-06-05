@@ -19,6 +19,8 @@ public class GeneralInfo extends JPanel {
 	JLabel numFriends;
 	JLabel numFriendsOn;
 	JLabel serverOn;
+
+
 	
 	JButton refreshButton;
 
@@ -28,10 +30,10 @@ public class GeneralInfo extends JPanel {
 		this.setPreferredSize(new Dimension(width, height));
 		//this.setLayout(new GridLayout(0,1));
 		
-		numBackupFiles = new JLabel("number of files backed up: "+mainThread.getBackupList().size());
-		totalSize = new JLabel("total size backed up: 1203MB");
-		numFriends = new JLabel("number of friends: 15");
-		numFriendsOn = new JLabel("number of friends online: 3");
+		numBackupFiles = new JLabel("number of files backed up: "+ mainThread.getBackupList().size());
+		totalSize = new JLabel("total size backed up: " + mainThread.getSizeBackedUp());
+		numFriends = new JLabel("number of friends: " + mainThread.getFriends().size());
+		numFriendsOn = new JLabel("number of friends online: " + mainThread.getNumberOfFriendsOnline());
 		serverOn = new JLabel("server online: YES");
 		
 		this.add(numBackupFiles);
@@ -51,6 +53,19 @@ public class GeneralInfo extends JPanel {
 	public void setNumBackupFiles(int num) {
 		numBackupFiles.setText("number of files backed up: " + mainThread.getBackupList().size());
 	}
+	
+	public void setSizeBackedUp(int num) {
+		totalSize.setText("total size backed up: " + mainThread.getSizeBackedUp());
+	}
+	
+	public void setNumberOfFriends(int num) {
+		numFriends.setText("number of friends: " + mainThread.getFriends().size());
+	}
+	
+	public void setNumberOnlineFriends(int num) {
+		numFriendsOn.setText("number of friends online: " + mainThread.getNumberOfFriendsOnline());
+	}
+
 
 	public JButton getRefreshButton() {
 		return refreshButton;

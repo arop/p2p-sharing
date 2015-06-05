@@ -913,4 +913,29 @@ public class PeerNew {
 	public void setChunksToReceive(int i) {
 		chunksToReceive = i;
 	}
+	
+	
+	public int getSizeBackedUp() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+	
+
+	public int getNumberOfFriendsOnline() {
+		int total = 0, i = 0;
+		ArrayList<Integer> ids = new ArrayList<Integer>();
+		ArrayList<User> onlineUsers = this.getOnlineUsersFromServer();
+		
+		for(i = 0; i < onlineUsers.size(); i++) {
+			ids.add(onlineUsers.get(i).getId());
+		}
+		
+		for(i = 0; i < friends.size(); i++) {
+			if(ids.contains(friends.get(i).getId())) {
+				total++;
+			}
+		}
+		
+		return total;
+	}
 }
