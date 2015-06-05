@@ -18,6 +18,7 @@ import javax.swing.SpinnerNumberModel;
 import peer.PeerNew;
 import ui.deleteFileFrame.DeleteFilesWindow;
 import ui.restoreFrame.RestoreFilesWindow;
+import ui.spaceReclaimFrame.ReclaimFilesWindow;
 import user.User;
 import extra.Tools;
 
@@ -133,6 +134,13 @@ public class GUI extends JFrame {
 		button = new JButton("<html><center>Reclaim<br>Space<center></html>");
 		button.setPreferredSize(new Dimension(buttonWidth, buttonHeight));
 		panel.add(button);
+		button.addActionListener(new ActionListener()
+		{
+			@Override	
+			public void actionPerformed(ActionEvent e){
+				new ReclaimFilesWindow(mainThread);
+			}
+		});
 
 		return panel;
 	}

@@ -15,6 +15,8 @@ public class Chunk implements Comparator<Chunk>,Comparable<Chunk>{
 	private int chunkNo, replicationDeg = 1;
 	private ArrayList<Integer> userIDs;
 
+	private int userWhoSent;
+
 	public Chunk() {}
 	
 	public Chunk(byte[] c) {
@@ -28,6 +30,15 @@ public class Chunk implements Comparator<Chunk>,Comparable<Chunk>{
 		replicationDeg = degree;
 		this.fileId = fileId;
 		userIDs = new ArrayList<Integer>();
+	}
+	
+	public Chunk(byte[] c, int number, int degree, String fileId, int userId) {
+		chunk = c.clone();
+		chunkNo = number;
+		replicationDeg = degree;
+		this.fileId = fileId;
+		userIDs = new ArrayList<Integer>();
+		userWhoSent = userId;
 	}
 
 	public Chunk(String fileId, int number, int degree) {
@@ -126,4 +137,13 @@ public class Chunk implements Comparator<Chunk>,Comparable<Chunk>{
 	public int compareTo(Chunk c) {
 		return chunkNo - c.chunkNo;
 	}
+	
+	public int getUserWhoSent() {
+		return userWhoSent;
+	}
+
+	public void setUserWhoSent(int userWhoSent) {
+		this.userWhoSent = userWhoSent;
+	}
+
 }

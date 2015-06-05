@@ -115,17 +115,26 @@ public class ConnectionListenerPeer extends Thread {
 			return Tools.generateMessage("OK");
 
 		case "PUTCHUNK":
+			
 			String msgBody = Tools.getBody(message);
 			byte[] lineDecoded = Tools.decode(msgBody);
 
 			Chunk temp = new Chunk(lineDecoded);
 			splitMessage(temp,Tools.getHead(message));
 
+			
 			if(!mainThread.hasChunk(temp.getFileId(), temp.getChunkNo())) {
 				if(Tools.folderSize(new File("files\\backups")) + temp.getByteArray().length-1 <= Tools.getFolderSize() ) {
 					FileManagement.materializeChunk(temp);
 					mainThread.clearChunkList();
 					mainThread.loadChunkList();
+					
+					
+					System.out.println("OWNER: " + temp.getUserWhoSent());
+					mainThread.saveStoreChunkInfo(temp);
+					
+					
+					
 					return Tools.generateMessage("STORED", temp);
 				}
 			}
@@ -159,6 +168,9 @@ public class ConnectionListenerPeer extends Thread {
 				c = mainThread.searchChunk(fileId,chunkNo);
 				return Tools.generateMessage("CHUNK",c);
 			}
+		case "REMOVED":
+			return Tools.generateMessage("OK");
+			
 		default:
 			break;				
 		}
@@ -170,5 +182,7 @@ public class ConnectionListenerPeer extends Thread {
 		chunk.setFileId(temp[2]);
 		chunk.setChunkNo(Integer.parseInt(temp[3].trim()));
 		if(temp.length > 4) chunk.setReplicationDeg(Integer.parseInt(temp[4].trim()));
+		if(temp.length > 5) chunk.setUserWhoSent(Integer.parseInt(temp[5].trim()));
+
 	}
 }

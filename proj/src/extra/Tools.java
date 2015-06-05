@@ -61,7 +61,7 @@ public abstract class Tools {
 		switch(type) {
 		case "PUTCHUNK":
 			message = "PUTCHUNK " + String.valueOf(String.valueOf(body.length())) + " " + chunk.getFileId() +  " "  + chunk.getChunkNo() + " " + chunk.getReplicationDeg() 
-			+ " \r\n\r\n" + body + "\r\n\r\n";
+			+ " " + chunk.getUserWhoSent() + " \r\n\r\n" + body + "\r\n\r\n";
 			break;
 		case "STORED":
 			message = "STORED " + "0" + " " +  chunk.getFileId() +  " "  + chunk.getChunkNo() + " \r\n\r\n" + "\r\n\r\n"; 
