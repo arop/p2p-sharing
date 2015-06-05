@@ -460,23 +460,7 @@ public class PeerNew {
 			//SEND MESSAGE
 			out.println(msg);
 
-			//GET RESPONSE 
-//			ArrayList<String> messages = new ArrayList<String>();
-//			messages.add("CHUNK");
-//			messages.add("OK");
-//			messages.add("ONLINEUSERS");
-
 			response = new StateMachine().stateMachine(in);
-
-			/*
-			response = in.readLine();
-			response += in.readLine(); 				//(isto está assim hardcoded pq o 
-			response += "\r\n\r\n" + in.readLine(); 	//readLine lê até ao \r\n apenas)
-			 */
-
-			//PARSE RESPONSE
-			//String origin_ip = sslSocket.getInetAddress().getHostAddress();
-			//System.out.println("response: " + response + "#" + origin_ip);
 
 			// Closing the Streams and the Socket
 			out.close();
