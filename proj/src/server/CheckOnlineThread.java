@@ -48,10 +48,15 @@ public class CheckOnlineThread extends Thread {
 	 */
 	@Override
 	public void run() {
-		while(true) {
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e1) {
+			e1.printStackTrace();
+		}
+		while (true) {
 			try {
-				Thread.sleep(10000);
 				refreshOnlineUsers();
+				Thread.sleep(10000);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}

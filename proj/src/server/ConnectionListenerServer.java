@@ -77,12 +77,21 @@ public class ConnectionListenerServer extends Thread{
 					// Close the streams and the socket
 					out.close();
 					in.close();
-					//sslSocket.close();
+					sslSocket.close();
 					sslServerSocket.close();	
 				}
 			}
 			catch(Exception exp)
 			{
+				try {
+					sslSocket.close();
+					sslServerSocket.close();
+				} catch (IOException e) {
+					System.out.println("Problem with socket... Shutting down. Press any key.");
+					new java.util.Scanner(System.in).nextLine();	
+					System.exit(-1);
+				}
+						
 				PrivilegedActionException priexp = new PrivilegedActionException(exp);
 				System.out.println(" Priv exp --- " + priexp.getMessage());
 				System.out.println(" Exception occurred .... " +exp);
