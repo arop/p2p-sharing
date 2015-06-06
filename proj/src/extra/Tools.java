@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.UnknownHostException;
-
+import java.util.Base64;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -20,7 +20,7 @@ import main.Chunk;
  *
  */
 public abstract class Tools {
-	static int packetSize = 15000;	
+	static int packetSize = 14000;	
 	static long folderSize = 10000000L;
 	static boolean debug = true;
 
@@ -314,21 +314,45 @@ public abstract class Tools {
 
 	@SuppressWarnings("restriction")
 	public static String encode(byte[] bytes){
+		
 		//alternative 1 -> try encoding base64 (sun)
+		//System.out.println("going to encode "+bytes.length+" bytes");
 		sun.misc.BASE64Encoder enc = new sun.misc.BASE64Encoder();
-		return enc.encode(bytes); 
+		String ret = enc.encode(bytes);
+		//System.out.println("	encoded to string with length "+ret.length());
+		return ret;
+		
+		//alternative2 -> java8 encoder
+		/*System.out.println("going to encode "+bytes.length+" bytes");
+		Base64.Encoder enc2 = Base64.getEncoder().withoutPadding();
+		String ret2 = enc2.encodeToString(bytes);
+		System.out.println("	encoded to string with length "+ret2.length());
+		return ret2; */
 	}
 
 	@SuppressWarnings("restriction")
 	public static byte[] decode(String bytes){
+			
+		
 		//alternative 1 -> try encoding base64 (sun)
+		//System.out.println("going to decode string with size "+bytes.length());
 		sun.misc.BASE64Decoder dec = new sun.misc.BASE64Decoder();
 		try {
-			return dec.decodeBuffer(bytes);
+			byte[] ret = dec.decodeBuffer(bytes);
+			//System.out.println("	decoded to "+ret.length+" bytes");
+			return ret;
 		} catch (IOException e) {
 			System.out.println("error decoding string to byte[].");
 			e.printStackTrace();
 			return null;
 		}
+		
+		
+		//alternative2 -> java8 decoder
+		/*System.out.println("going to decode string with size "+bytes.length());
+		Base64.Decoder dec2 = Base64.getDecoder();
+		byte[] ret2 = dec2.decode(bytes);
+		System.out.println("	decoded to "+ret2.length+" bytes");
+		return ret2; */
 	}
 }

@@ -13,6 +13,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivilegedActionException;
@@ -92,6 +93,8 @@ public class PeerNew {
 
 	public ArrayList<User> getAllUsersFromServer(){
 		String response = this.sendMessage(Tools.generateMessage("GETALLUSERS"), serverAddress, serverPort,0);
+		if (response == null)
+			return null;
 		Gson gson = new Gson();
 		String type = response.split(" +")[0];
 		if (!type.equals("USERS"))
@@ -104,6 +107,8 @@ public class PeerNew {
 
 	public void getFriendsFromServer(){
 		String response = this.sendMessage(Tools.generateMessage("GETFRIENDS", this.localUser.getId()), serverAddress, serverPort,0);
+		if (response == null)
+			return;
 		Gson gson = new Gson();
 		String type = Tools.getType(response);
 		if (!type.equals("FRIENDS")){
@@ -117,6 +122,8 @@ public class PeerNew {
 
 	public ArrayList<User> getOnlineUsersFromServer(){
 		String response = this.sendMessage(Tools.generateMessage("GETONLINEUSERS"), serverAddress, serverPort,0);
+		if (response == null)
+			return null;
 		Gson gson = new Gson();
 		String type = Tools.getType(response);
 		if (!type.equals("ONLINEUSERS")){
@@ -136,7 +143,8 @@ public class PeerNew {
 		Gson gson = new Gson();
 		String json_data = gson.toJson(user_ids);
 		String response = this.sendMessage(Tools.generateJsonMessage("ADDFRIENDS", localUser.getId(), json_data), serverAddress, serverPort,0);
-
+		if (response == null)
+			return false;
 		return Tools.getType(response).equals("OK");
 	}
 
@@ -200,6 +208,9 @@ public class PeerNew {
 
 		String messagebody = username + " " + password;
 		String response = this.sendMessage(Tools.generateJsonMessage("LOGIN",messagebody), serverAddress, serverPort,0);
+		if (response == null)
+			return false;
+		
 		if(!Tools.getType(response).equals("OK"))
 			return false;
 
@@ -223,6 +234,9 @@ public class PeerNew {
 
 		String messagebody = id + "#" + name + "#" + port;
 		String response = this.sendMessage(Tools.generateJsonMessage("LOGINFACEBOOK",messagebody), serverAddress, serverPort,0);
+		if (response == null)
+			return false;
+		
 		if(!Tools.getType(response).equals("OK"))
 			return false;
 		Gson g = new Gson();
@@ -235,6 +249,8 @@ public class PeerNew {
 		if(password1.equals(password2)) {
 			String messagebody = username + " " + email + " " + password1 + " " + desiredPort;
 			String response = this.sendMessage(Tools.generateJsonMessage("REGISTER",messagebody), serverAddress, serverPort,0);
+			if (response == null)
+				return false;
 			return Tools.getType(response).equals("OK");
 		}
 		return false;
@@ -362,7 +378,7 @@ public class PeerNew {
 			in = new BufferedReader(new InputStreamReader(sslSocket.getInputStream()));
 
 			//SEND MESSAGE
-			out.write(msg.getBytes());
+			out.write(msg.getBytes(StandardCharsets.ISO_8859_1));
 			out.flush();
 			//out.println(msg);
 
@@ -768,7 +784,7 @@ public class PeerNew {
 		else {
 			for(User user : new ArrayList<User> (onlineUsers)){
 				if(user.getId() == localUser.getId()) onlineUsers.remove(user);
-				System.out.println("User: "+user.getIp()+":"+user.getPort());
+				//System.out.println("User: "+user.getIp()+":"+user.getPort());
 			}
 		}
 
@@ -804,12 +820,11 @@ public class PeerNew {
 				User temp = onlineUsers.get(index);
 				String answer = this.sendMessage(msg, temp.getIp(), temp.getPort(), 0);
 
-				System.out.println("Answer: " + answer);
+				if(answer == null) 
+					System.err.println("NULL");
 
-				if(answer == null) System.err.println("NULL");
-
-				if(Tools.getType(answer).equals("STORED")) {
-					Chunk ficticio = new Chunk(Tools.getBody(answer).getBytes());
+				else if(Tools.getType(answer).equals("STORED")) {
+					Chunk ficticio = new Chunk(Tools.decode(Tools.getBody(answer)));
 					con_listener.splitMessage(ficticio,Tools.getHead(answer));
 					incConfirmations(ficticio.getFileId(),ficticio.getChunkNo(),degreeListSent);
 					chunk.addUserID(temp.getId());

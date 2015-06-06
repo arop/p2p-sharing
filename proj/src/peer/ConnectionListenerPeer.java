@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
 import java.security.PrivilegedActionException;
 
@@ -53,7 +54,7 @@ public class ConnectionListenerPeer extends Thread {
 					System.out.println("	from: "+origin_ip);
 					String responseMessage = this.parseReceivedMessage(finalString);
 					//SEND RESPONSE
-					out.write(responseMessage.getBytes());
+					out.write(responseMessage.getBytes(StandardCharsets.ISO_8859_1));
 					out.flush();
 					System.out.println("Answer sent!\n	" + Tools.getHead(responseMessage));
 					// Close the streams and the socket
@@ -66,6 +67,14 @@ public class ConnectionListenerPeer extends Thread {
 			}
 			catch(Exception exp)
 			{
+				try {
+					sslSocket.close();
+					sslServerSocket.close();
+				} catch (IOException e) {
+					System.out.println("Problem with socket... Shutting down. Press any key.");
+					new java.util.Scanner(System.in).nextLine();
+					System.exit(-1);
+				}	
 				PrivilegedActionException priexp = new PrivilegedActionException(exp);
 				System.out.println(" Priv exp --- " + priexp.getMessage());
 				System.out.println(" Exception occurred .... " +exp);
@@ -95,7 +104,7 @@ public class ConnectionListenerPeer extends Thread {
 
 			return (SSLServerSocket) factory.createServerSocket(socket_port);
 		} catch (Exception e) {
-			System.out.println("Problem creating SSL Server Socket: "+ e.getMessage()+"\n"+e.getCause());
+			System.out.println("Problem creating SSL Server Socket: "+ e.getMessage()+" #cause: "+e.getCause());
 			return null;
 		}	    
 	}
